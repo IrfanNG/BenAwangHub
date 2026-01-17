@@ -1,0 +1,28 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Android
+android/.gradle/
+android/app/debug
+android/app/profile
+android/app/release
+*.jks
+key.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+
+# Firebase
+firebase-debug.log
+.firebaserc
+.firebase/
+
+# Env / secrets
+.env
+.env.*
