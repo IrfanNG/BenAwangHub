@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
 import '../services/registration_service.dart';
 import '../services/payment_service.dart';
 import '../services/user_role_service.dart';
@@ -48,11 +49,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          var data = snapshot.data!.data() as Map<String, dynamic>;
+          final data = snapshot.data!.data() as Map<String, dynamic>;
 
-          double adultFee = (data["adultFee"] ?? 0).toDouble();
-          double childFee = (data["childFee"] ?? 0).toDouble();
-          double total = (adults * adultFee) + (kids * childFee);
+          final double adultFee = (data["adultFee"] ?? 0).toDouble();
+          final double childFee = (data["childFee"] ?? 0).toDouble();
+          final double total = (adults * adultFee) + (kids * childFee);
+
+          /// ⭐ IMPORTANT FLAG
+          final bool isPaidEvent = adultFee > 0 || childFee > 0;
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -106,60 +110,63 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
                 const SizedBox(height: 16),
 
-                _counter("Adults", adults, () {
-                  if (adults > 1) setState(() => adults--);
-                }, () {
-                  setState(() => adults++);
-                }),
+                _counter("Adults", adults,
+                    () => setState(() {
+                          if (adults > 1) adults--;
+                        }),
+                    () => setState(() => adults++)),
 
                 const SizedBox(height: 12),
 
-                _counter("Kids", kids, () {
-                  if (kids > 0) setState(() => kids--);
-                }, () {
-                  setState(() => kids++);
-                }),
+                _counter("Kids", kids,
+                    () => setState(() {
+                          if (kids > 0) kids--;
+                        }),
+                    () => setState(() => kids++)),
 
                 const SizedBox(height: 20),
 
-                /// TOTAL
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Total",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: primary,
+                /// TOTAL (PAID EVENT ONLY)
+                if (isPaidEvent) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: card,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Total",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: primary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "RM ${total.toStringAsFixed(2)}",
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: accent,
+                        Text(
+                          "RM ${total.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: accent,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                ],
 
                 const Spacer(),
 
-                /// REGISTER
+                /// REGISTER (ALWAYS)
                 _primaryButton(
                   label: "Register",
                   onPressed: () async {
-                    var user = FirebaseAuth.instance.currentUser;
+                    final user = FirebaseAuth.instance.currentUser;
                     if (user == null) return;
 
                     await RegistrationService.register(
@@ -172,35 +179,90 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     );
 
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Registered successfully")),
+                      const SnackBar(
+                        content: Text("Registered successfully"),
+                      ),
                     );
                   },
                 ),
 
                 const SizedBox(height: 10),
 
-                /// PAYMENT
-                _secondaryButton(
-                  label: "I Have Paid",
-                  onPressed: () async {
-                    var user = FirebaseAuth.instance.currentUser;
-                    if (user == null) return;
+                /// PAYMENT (PAID EVENT ONLY)
+                if (isPaidEvent)
+                  _secondaryButton(
+                    label: "I Have Paid",
+                    onPressed: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user == null) return;
 
-                    await PaymentService.submitPayment(
-                      eventId: widget.eventId,
-                      userId: user.uid,
-                      amount: total,
-                    );
+                      await PaymentService.submitPayment(
+                        eventId: widget.eventId,
+                        userId: user.uid,
+                        amount: total,
+                      );
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Payment submitted")),
-                    );
-                  },
-                ),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Payment submitted"),
+                        ),
+                      );
+                    },
+                  ),
 
                 const SizedBox(height: 20),
 
                 const Divider(),
+
+                FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance
+                      .collection("events")
+                      .doc(widget.eventId)
+                      .collection("registrations")
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .get(),
+                  builder: (context, snap) {
+                    if (!snap.hasData || !snap.data!.exists) {
+                      return const SizedBox();
+                    }
+
+                    final reg = snap.data!.data() as Map<String, dynamic>;
+                    final luckyNumber = reg["luckyNumber"];
+
+                    if (luckyNumber == null) return const SizedBox();
+
+                    return Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Lucky Number",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            luckyNumber,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF374151),
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
 
                 /// USER CHECK-IN
                 FutureBuilder<bool>(
@@ -253,6 +315,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  /// ===== COUNTER =====
   Widget _counter(
     String label,
     int value,
@@ -288,6 +351,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  /// ===== BUTTONS =====
   Widget _primaryButton({
     required String label,
     IconData? icon,
@@ -333,6 +397,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
+  /// ===== USER QR (UNCHANGED, FUTURE USE) =====
   Widget buildUserQR(String eventId, String userId) {
     final qrData = "$eventId|$userId";
 

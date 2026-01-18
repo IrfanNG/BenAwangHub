@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventService {
-  static Future<void> createEvent({
+    static Future<void> createEvent({
     required String title,
     required String date,
     required String location,
     required double adultFee,
     required double childFee,
     required String deadline,
+    required bool hasLuckyDraw,
   }) async {
     await FirebaseFirestore.instance.collection("events").add({
       "title": title,
@@ -16,8 +17,8 @@ class EventService {
       "adultFee": adultFee,
       "childFee": childFee,
       "deadline": deadline,
-      "status": "active",
-      "createdAt": Timestamp.now(),
+      "hasLuckyDraw": hasLuckyDraw,
+      "createdAt": FieldValue.serverTimestamp(),
     });
   }
 }

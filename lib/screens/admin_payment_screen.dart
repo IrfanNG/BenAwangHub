@@ -98,7 +98,7 @@ class AdminPaymentScreen extends StatelessWidget {
 class _PaymentCard extends StatefulWidget {
   final String paymentId;
   final String userId;
-  final double amount;
+  final num amount;
   final Timestamp? timestamp;
 
   const _PaymentCard({
@@ -121,6 +121,8 @@ class _PaymentCardState extends State<_PaymentCard> {
     const secondary = Color(0xFF6B7280);
     const border = Color(0xFFE5E7EB);
     const success = Color(0xFF16A34A);
+    final amount = widget.amount.toDouble();
+
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -178,8 +180,8 @@ class _PaymentCardState extends State<_PaymentCard> {
                 "Amount",
                 style: TextStyle(color: secondary),
               ),
-              Text(
-                "RM ${widget.amount.toStringAsFixed(2)}",
+                Text(
+                  "RM ${amount.toStringAsFixed(2)}",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

@@ -6,6 +6,7 @@ import 'admin_payment_screen.dart';
 import 'profile_screen.dart';
 import '../services/user_role_service.dart';
 import 'qr_scan_screen.dart';
+import 'admin_edit_event_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -121,139 +122,233 @@ class HomeScreen extends StatelessWidget {
           ),
 
           /// ===== EVENT LIST =====
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection("events").snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
+          FutureBuilder<bool>(
+            future: UserRoleService.isAdmin(),
+            builder: (context, adminSnap) {
+              final isAdmin = adminSnap.data == true;
 
-              if (snapshot.data!.docs.isEmpty) {
-                return const SliverFillRemaining(
-                  child: Center(
-                    child: Text(
-                      "No events available",
-                      style: TextStyle(color: textSecondary),
-                    ),
-                  ),
-                );
-              }
+              return StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection("events").snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-              return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final doc = snapshot.data!.docs[index];
-                      final data = doc.data() as Map<String, dynamic>;
+                  if (snapshot.data!.docs.isEmpty) {
+                    return const SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          "No events available",
+                          style: TextStyle(color: textSecondary),
+                        ),
+                      ),
+                    );
+                  }
 
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  EventDetailScreen(eventId: doc.id),
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final doc = snapshot.data!.docs[index];
+                          final data = doc.data() as Map<String, dynamic>;
+
+                          return Dismissible(
+                            key: Key(doc.id),
+
+                            /// 👉 ADMIN ONLY SLIDE (BOTH SIDES)
+                            direction: isAdmin
+                                ? DismissDirection.horizontal
+                                : DismissDirection.none,
+
+                            /// 👉 EDIT BACKGROUND (SLIDE RIGHT)
+                            background: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.only(left: 24),
+                              alignment: Alignment.centerLeft,
+                              decoration: BoxDecoration(
+                                color: Colors.blueGrey.shade600,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                                size: 28,
+                              ),
                             ),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x14000000),
-                                blurRadius: 6,
-                                offset: Offset(0, 3),
+
+                            /// 👉 DELETE BACKGROUND (SLIDE LEFT)
+                            secondaryBackground: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.only(right: 24),
+                              alignment: Alignment.centerRight,
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade600,
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.event,
-                                  color: iconColor,
-                                ),
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                                size: 28,
                               ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      data["title"] ?? "Untitled Event",
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: textPrimary,
+                            ),
+
+                            /// 👉 INTERCEPT ACTION
+                            confirmDismiss: (direction) async {
+                              if (!isAdmin) return false;
+
+                              /// ===== EDIT =====
+                              if (direction == DismissDirection.startToEnd) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AdminEditEventScreen(eventId: doc.id),
+                                  ),
+                                );
+                                return false; // ❗ IMPORTANT: DO NOT DISMISS
+                              }
+
+                              /// ===== DELETE =====
+                              if (direction == DismissDirection.endToStart) {
+                                return await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text("Delete Event"),
+                                    content: const Text(
+                                      "Are you sure you want to delete this event?\nThis action cannot be undone.",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, false),
+                                        child: const Text("Cancel"),
                                       ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.calendar_today,
-                                          size: 13,
-                                          color: iconColor,
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context, true),
+                                        child: const Text(
+                                          "Delete",
+                                          style: TextStyle(color: Colors.red),
                                         ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          data["date"] ?? "TBA",
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.location_on,
-                                          size: 13,
-                                          color: iconColor,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            data["location"] ?? "TBA",
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: textSecondary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              return false;
+                            },
+
+                            /// 👉 DELETE ACTION (ONLY WHEN CONFIRMED)
+                            onDismissed: (direction) async {
+                              if (direction == DismissDirection.endToStart) {
+                                await FirebaseFirestore.instance
+                                    .collection("events")
+                                    .doc(doc.id)
+                                    .delete();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Event deleted")),
+                                );
+                              }
+                            },
+
+                            /// 👉 EVENT CARD (UNCHANGED)
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => EventDetailScreen(eventId: doc.id),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: cardColor,
+                                  borderRadius: BorderRadius.circular(14),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x14000000),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 3),
                                     ),
                                   ],
                                 ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Icon(Icons.event, color: iconColor),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            data["title"] ?? "Untitled Event",
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.calendar_today,
+                                                  size: 13, color: iconColor),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                data["date"] ?? "TBA",
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.location_on,
+                                                  size: 13, color: iconColor),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  data["location"] ?? "TBA",
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: textSecondary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(Icons.chevron_right, color: iconColor),
+                                  ],
+                                ),
                               ),
-                              const Icon(
-                                Icons.chevron_right,
-                                color: iconColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    childCount: snapshot.data!.docs.length,
-                  ),
-                ),
+                            ),
+                          );
+                        },
+                        childCount: snapshot.data!.docs.length,
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),

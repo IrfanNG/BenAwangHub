@@ -15,7 +15,9 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
   final adultFeeController = TextEditingController();
   final childFeeController = TextEditingController();
   final deadlineController = TextEditingController();
+
   bool isCreating = false;
+  bool hasLuckyDraw = false;
 
   @override
   void dispose() {
@@ -29,28 +31,34 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
   }
 
   Future<void> _createEvent() async {
+    /// REQUIRED FIELDS ONLY
     if (titleController.text.trim().isEmpty ||
         dateController.text.trim().isEmpty ||
         locationController.text.trim().isEmpty ||
-        adultFeeController.text.trim().isEmpty ||
-        childFeeController.text.trim().isEmpty ||
         deadlineController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
+        const SnackBar(content: Text("Please fill in required fields")),
       );
       return;
     }
 
     setState(() => isCreating = true);
 
+    /// ⭐ SAFE PARSING (FREE EVENT SUPPORTED)
+    final double adultFee =
+        double.tryParse(adultFeeController.text.trim()) ?? 0.0;
+    final double childFee =
+        double.tryParse(childFeeController.text.trim()) ?? 0.0;
+
     try {
       await EventService.createEvent(
         title: titleController.text.trim(),
         date: dateController.text.trim(),
         location: locationController.text.trim(),
-        adultFee: double.parse(adultFeeController.text.trim()),
-        childFee: double.parse(childFeeController.text.trim()),
+        adultFee: adultFee,
+        childFee: childFee,
         deadline: deadlineController.text.trim(),
+        hasLuckyDraw: hasLuckyDraw,
       );
 
       if (mounted) {
@@ -64,9 +72,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFFF8FAFC);
-    const card = Colors.white;
     const primary = Color(0xFF111827);
-    const secondary = Color(0xFF6B7280);
     const accent = Color(0xFF374151);
     const border = Color(0xFFE5E7EB);
 
@@ -97,27 +103,42 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
 
                   _field(
                     controller: titleController,
-                    label: "Event Title",
+                    label: "Event Title *",
                     hint: "Family Day 2026",
                   ),
                   _field(
                     controller: dateController,
-                    label: "Event Date",
+                    label: "Event Date *",
                     hint: "2026-06-10",
                   ),
                   _field(
                     controller: locationController,
-                    label: "Location",
+                    label: "Location *",
                     hint: "Port Dickson",
                   ),
                   _field(
                     controller: deadlineController,
-                    label: "Registration Deadline",
+                    label: "Registration Deadline *",
                     hint: "2026-05-20",
                   ),
 
+                  CheckboxListTile(
+                    value: hasLuckyDraw,
+                    onChanged: (val) {
+                      setState(() => hasLuckyDraw = val ?? false);
+                    },
+                    title: const Text(
+                      "Enable Cabutan Bertuah",
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: const Text(
+                      "Participants will receive a random 3-digit lucky number",
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+
                   const SizedBox(height: 24),
-                  _sectionTitle("Pricing"),
+                  _sectionTitle("Pricing (Optional)"),
 
                   Row(
                     children: [
@@ -125,7 +146,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                         child: _field(
                           controller: adultFeeController,
                           label: "Adult Fee (RM)",
-                          hint: "50",
+                          hint: "Leave empty if free",
                           keyboardType: TextInputType.number,
                         ),
                       ),
@@ -134,7 +155,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                         child: _field(
                           controller: childFeeController,
                           label: "Child Fee (RM)",
-                          hint: "20",
+                          hint: "Leave empty if free",
                           keyboardType: TextInputType.number,
                         ),
                       ),

@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'admin_attendance_screen.dart';
+import '../services/lucky_draw_service.dart';
 
-class AdminEventSummaryScreen extends StatelessWidget {
+class AdminEventSummaryScreen extends StatefulWidget {
   final String eventId;
 
   const AdminEventSummaryScreen({super.key, required this.eventId});
 
-  /// ===== ADMIN QR (LOGIC UNCHANGED) =====
+  @override
+  State<AdminEventSummaryScreen> createState() =>
+      _AdminEventSummaryScreenState();
+}
+
+class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
+  int winnerCount = 1;
+
+  /// ===== ADMIN QR =====
   Widget buildAdminQR(String eventId) {
     return Column(
       children: [
-        QrImageView(
-          data: eventId,
-          size: 200,
-        ),
+        QrImageView(data: eventId, size: 200),
         const SizedBox(height: 8),
         const Text(
           "Scan this QR to check in",
@@ -29,8 +36,6 @@ class AdminEventSummaryScreen extends StatelessWidget {
     const bg = Color(0xFFF8FAFC);
     const card = Colors.white;
     const primary = Color(0xFF111827);
-    const secondary = Color(0xFF6B7280);
-    const accent = Color(0xFF374151);
     const border = Color(0xFFE5E7EB);
 
     return Scaffold(
@@ -38,7 +43,7 @@ class AdminEventSummaryScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection("events")
-            .doc(eventId)
+            .doc(widget.eventId)
             .collection("registrations")
             .snapshots(),
         builder: (context, regSnap) {
@@ -49,7 +54,7 @@ class AdminEventSummaryScreen extends StatelessWidget {
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection("payments")
-                .where("eventId", isEqualTo: eventId)
+                .where("eventId", isEqualTo: widget.eventId)
                 .where("status", isEqualTo: "approved")
                 .snapshots(),
             builder: (context, paySnap) {
@@ -64,35 +69,30 @@ class AdminEventSummaryScreen extends StatelessWidget {
 
               int totalAdults = 0;
               int totalKids = 0;
-              double totalAmount = 0;
               int paidCount = 0;
 
               for (var doc in regSnap.data!.docs) {
                 final data = doc.data() as Map<String, dynamic>;
                 totalAdults += (data["adults"] ?? 0) as int;
                 totalKids += (data["kids"] ?? 0) as int;
-                totalAmount += (data["total"] ?? 0).toDouble();
                 if (paidUsers.containsKey(doc.id)) paidCount++;
               }
 
               return CustomScrollView(
                 slivers: [
-                  /// ===== APP BAR =====
-                  SliverAppBar(
-                    expandedHeight: 120,
+                  /// APP BAR
+                  const SliverAppBar(
                     pinned: true,
                     backgroundColor: Colors.white,
                     foregroundColor: primary,
                     elevation: 0,
-                    flexibleSpace: const FlexibleSpaceBar(
-                      title: Text(
-                        "Event Summary",
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                    title: Text(
+                      "Event Summary",
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
 
-                  /// ===== SUMMARY =====
+                  /// CONTENT
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -110,7 +110,7 @@ class AdminEventSummaryScreen extends StatelessWidget {
                             child: StreamBuilder<DocumentSnapshot>(
                               stream: FirebaseFirestore.instance
                                   .collection("events")
-                                  .doc(eventId)
+                                  .doc(widget.eventId)
                                   .snapshots(),
                               builder: (context, snap) {
                                 if (!snap.hasData ||
@@ -118,10 +118,10 @@ class AdminEventSummaryScreen extends StatelessWidget {
                                   return const SizedBox();
                                 }
 
-                                final data =
+                                final event =
                                     snap.data!.data() as Map<String, dynamic>;
                                 final isActive =
-                                    data["checkInActive"] == true;
+                                    event["checkInActive"] == true;
 
                                 if (!isActive) {
                                   return _primaryButton(
@@ -130,31 +130,48 @@ class AdminEventSummaryScreen extends StatelessWidget {
                                     onPressed: () async {
                                       await FirebaseFirestore.instance
                                           .collection("events")
-                                          .doc(eventId)
-                                          .update({"checkInActive": true});
+                                          .doc(widget.eventId)
+                                          .update({
+                                        "checkInActive": true,
+                                        "winnerCount": winnerCount,
+                                      });
                                     },
                                   );
                                 }
 
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Check-in Active",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: primary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    buildAdminQR(eventId),
-                                  ],
-                                );
+                                return buildAdminQR(widget.eventId);
                               },
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+
+                          /// ATTENDANCE
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey.shade800,
+                              foregroundColor: Colors.white,
+                              minimumSize:
+                                  const Size(double.infinity, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            icon: const Icon(Icons.fact_check),
+                            label: const Text("View Attendance List"),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => AdminAttendanceScreen(
+                                    eventId: widget.eventId,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 24),
 
                           /// STATS
                           Row(
@@ -194,31 +211,81 @@ class AdminEventSummaryScreen extends StatelessWidget {
                               ),
                             ],
                           ),
+
+                          const SizedBox(height: 24),
+
+                          /// 🎯 WINNER SETTING
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: card,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: border),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "Number of Winners",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    const Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: () {
+                                        if (winnerCount > 1) {
+                                          setState(() => winnerCount--);
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      winnerCount.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add),
+                                      onPressed: () {
+                                        setState(() => winnerCount++);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                _primaryButton(
+                                  label: "Pick Winners",
+                                  icon: Icons.emoji_events,
+                                  onPressed: () async {
+                                    try {
+                                      await LuckyDrawService.pickWinners(
+                                        widget.eventId,
+                                        winnerCount,
+                                      );
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              "🎉 Winners picked successfully"),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(e.toString()),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                  ),
-
-                  /// ===== REGISTRATION LIST =====
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final doc = regSnap.data!.docs[index];
-                          final data =
-                              doc.data() as Map<String, dynamic>;
-                          final paid =
-                              paidUsers.containsKey(doc.id);
-
-                          return _RegistrationCard(
-                            eventId: eventId,
-                            userId: doc.id,
-                            total: (data["total"] ?? 0).toDouble(),
-                            isPaid: paid,
-                          );
-                        },
-                        childCount: regSnap.data!.docs.length,
                       ),
                     ),
                   ),
@@ -232,15 +299,12 @@ class AdminEventSummaryScreen extends StatelessWidget {
   }
 }
 
-/// ===== STAT CARD (UI ONLY) =====
+/// ===== STAT CARD =====
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
 
-  const _StatCard({
-    required this.label,
-    required this.value,
-  });
+  const _StatCard({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -258,136 +322,11 @@ class _StatCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF111827),
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(color: Color(0xFF6B7280)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// ===== REGISTRATION CARD (ATTENDANCE LOGIC KEKAL) =====
-class _RegistrationCard extends StatelessWidget {
-  final String eventId;
-  final String userId;
-  final double total;
-  final bool isPaid;
-
-  const _RegistrationCard({
-    required this.eventId,
-    required this.userId,
-    required this.total,
-    required this.isPaid,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final statusColor =
-        isPaid ? const Color(0xFF374151) : const Color(0xFF9CA3AF);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isPaid ? Icons.check_circle : Icons.pending,
-            color: statusColor,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance
-                      .collection("users")
-                      .doc(userId)
-                      .get(),
-                  builder: (context, snap) {
-                    if (!snap.hasData) {
-                      return const Text(
-                        "Loading...",
-                        style: TextStyle(fontSize: 14),
-                      );
-                    }
-
-                    if (!snap.data!.exists) {
-                      return const Text(
-                        "Unknown User",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      );
-                    }
-
-                    final user = snap.data!.data() as Map<String, dynamic>;
-
-                    return Text(
-                      user["name"] ?? "Unnamed User",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2D3142),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 6),
-
-                /// ATTENDANCE (LOGIC UNCHANGED)
-                FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance
-                      .collection("attendance")
-                      .doc("${eventId}_$userId")
-                      .get(),
-                  builder: (context, snap) {
-                    final present =
-                        snap.hasData && snap.data!.exists;
-
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: present
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        present ? "Present" : "Absent",
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              present ? Colors.green : Colors.grey,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          Text(
-            "RM ${total.toStringAsFixed(2)}",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: statusColor,
-            ),
-          ),
+          Text(label,
+              style: const TextStyle(color: Color(0xFF6B7280))),
         ],
       ),
     );
