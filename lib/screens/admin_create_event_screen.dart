@@ -31,20 +31,22 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
   }
 
   Future<void> _createEvent() async {
-    /// REQUIRED FIELDS ONLY
+    // Required fields check
     if (titleController.text.trim().isEmpty ||
         dateController.text.trim().isEmpty ||
         locationController.text.trim().isEmpty ||
         deadlineController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in required fields")),
+        SnackBar(
+          content: const Text("Please fill in required fields"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
 
     setState(() => isCreating = true);
 
-    /// ⭐ SAFE PARSING (FREE EVENT SUPPORTED)
     final double adultFee =
         double.tryParse(adultFeeController.text.trim()) ?? 0.0;
     final double childFee =
@@ -63,139 +65,177 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
 
       if (mounted) {
         Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Event created successfully")),
+        );
       }
     } catch (e) {
-      setState(() => isCreating = false);
+      if (mounted) {
+        setState(() => isCreating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: $e"),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFFF8FAFC);
-    const primary = Color(0xFF111827);
-    const accent = Color(0xFF374151);
-    const border = Color(0xFFE5E7EB);
+    // Leveraging the global AppTheme by default
 
     return Scaffold(
-      backgroundColor: bg,
+      appBar: AppBar(title: const Text("Create Event"), centerTitle: true),
       body: CustomScrollView(
         slivers: [
-          /// ===== APP BAR =====
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: Colors.white,
-            foregroundColor: primary,
-            elevation: 0,
-            title: const Text(
-              "Create Event",
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-
-          /// ===== FORM =====
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionTitle("Event Details"),
+                  _sectionTitle(context, "Event Details"),
+                  const SizedBox(height: 16),
 
-                  _field(
+                  TextField(
                     controller: titleController,
-                    label: "Event Title *",
-                    hint: "Family Day 2026",
+                    decoration: const InputDecoration(
+                      labelText: "Event Title *",
+                      hintText: "e.g. Family Day 2026",
+                    ),
                   ),
-                  _field(
+                  const SizedBox(height: 16),
+
+                  TextField(
                     controller: dateController,
-                    label: "Event Date *",
-                    hint: "2026-06-10",
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+                      if (pickedDate != null) {
+                        // Formatting to YYYY-MM-DD
+                        String formattedDate =
+                            "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                        setState(() {
+                          dateController.text = formattedDate;
+                        });
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: "Event Date *",
+                      hintText: "YYYY-MM-DD",
+                    ),
                   ),
-                  _field(
+                  const SizedBox(height: 16),
+
+                  TextField(
                     controller: locationController,
-                    label: "Location *",
-                    hint: "Port Dickson",
+                    decoration: const InputDecoration(
+                      labelText: "Location *",
+                      hintText: "e.g. Port Dickson",
+                    ),
                   ),
-                  _field(
+                  const SizedBox(height: 16),
+
+                  TextField(
                     controller: deadlineController,
-                    label: "Registration Deadline *",
-                    hint: "2026-05-20",
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+                      if (pickedDate != null) {
+                        String formattedDate =
+                            "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                        setState(() {
+                          deadlineController.text = formattedDate;
+                        });
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: "Registration Deadline *",
+                      hintText: "YYYY-MM-DD",
+                    ),
                   ),
+                  const SizedBox(height: 16),
 
                   CheckboxListTile(
                     value: hasLuckyDraw,
                     onChanged: (val) {
                       setState(() => hasLuckyDraw = val ?? false);
                     },
-                    title: const Text(
-                      "Enable Cabutan Bertuah",
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
+                    title: const Text("Enable Cabutan Bertuah"),
                     subtitle: const Text(
-                      "Participants will receive a random 3-digit lucky number",
+                      "Participants will receive a random lucky number",
                     ),
+                    contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.leading,
+                    activeColor: Theme.of(context).colorScheme.primary,
                   ),
 
-                  const SizedBox(height: 24),
-                  _sectionTitle("Pricing (Optional)"),
+                  const SizedBox(height: 32),
+                  _sectionTitle(context, "Pricing (Optional)"),
+                  const SizedBox(height: 16),
 
                   Row(
                     children: [
                       Expanded(
-                        child: _field(
+                        child: TextField(
                           controller: adultFeeController,
-                          label: "Adult Fee (RM)",
-                          hint: "Leave empty if free",
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: "Adult Fee (RM)",
+                            hintText: "0.00",
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: _field(
+                        child: TextField(
                           controller: childFeeController,
-                          label: "Child Fee (RM)",
-                          hint: "Leave empty if free",
-                          keyboardType: TextInputType.number,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: "Child Fee (RM)",
+                            hintText: "0.00",
+                          ),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
 
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
                       onPressed: isCreating ? null : _createEvent,
                       child: isCreating
                           ? const SizedBox(
-                              height: 22,
-                              width: 22,
+                              height: 20,
+                              width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+                                color: Colors.white,
                               ),
                             )
-                          : const Text(
-                              "Create Event",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                          : const Text("Create Event"),
                     ),
                   ),
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -205,51 +245,12 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
     );
   }
 
-  /// ===== UI COMPONENTS =====
-
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF111827),
-        ),
-      ),
-    );
-  }
-
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        style: const TextStyle(
-          fontSize: 15,
-          color: Color(0xFF111827),
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-          hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-          border: InputBorder.none,
-        ),
-      ),
+  Widget _sectionTitle(BuildContext context, String text) {
+    return Text(
+      text,
+      style: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }

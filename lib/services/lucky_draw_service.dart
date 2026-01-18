@@ -3,45 +3,57 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LuckyDrawService {
-  static Future<void> pickWinners(String eventId, int winnerCount) async {
+  /// Returns list of {userId, number} for animation
+  static Future<List<Map<String, String>>> getEligibleTickets(
+    String eventId,
+  ) async {
     final firestore = FirebaseFirestore.instance;
 
-    // 1. Check if winners already picked
-    final existing = await firestore
+    // 1. Get existing winners to exclude them?
+    final existingSnap = await firestore
         .collection("events")
         .doc(eventId)
         .collection("winners")
         .get();
 
-    if (existing.docs.isNotEmpty) {
-      throw Exception("Winners already picked");
-    }
+    final existingWinnerNumbers = existingSnap.docs.map((d) => d.id).toSet();
 
     // 2. Get event
-    final eventSnap =
-        await firestore.collection("events").doc(eventId).get();
-
+    final eventSnap = await firestore.collection("events").doc(eventId).get();
     final event = eventSnap.data()!;
-    final int winnerCount = event["winnerCount"] ?? 1;
-
     final isFree =
         (event["adultFee"] ?? 0) == 0 && (event["childFee"] ?? 0) == 0;
 
-    // 3. Get registrations with lucky number
+    // 3. Get registrations
     final regs = await firestore
         .collection("events")
         .doc(eventId)
         .collection("registrations")
-        .where("luckyNumber", isNull: false)
         .get();
 
-    if (regs.docs.isEmpty) {
-      throw Exception("No eligible participants");
+    if (regs.docs.isEmpty) return [];
+
+    List<Map<String, String>> tickets = [];
+
+    for (var doc in regs.docs) {
+      final data = doc.data();
+      final String userId = doc.id;
+
+      if (data["luckyNumbers"] != null) {
+        final List<dynamic> nums = data["luckyNumbers"];
+        for (var n in nums) {
+          if (!existingWinnerNumbers.contains(n.toString())) {
+            tickets.add({"userId": userId, "number": n.toString()});
+          }
+        }
+      } else if (data["luckyNumber"] != null) {
+        final n = data["luckyNumber"].toString();
+        if (!existingWinnerNumbers.contains(n)) {
+          tickets.add({"userId": userId, "number": n});
+        }
+      }
     }
 
-    List<QueryDocumentSnapshot> eligible = regs.docs;
-
-    // 4. Filter paid users if paid event
     if (!isFree) {
       final payments = await firestore
           .collection("payments")
@@ -49,37 +61,41 @@ class LuckyDrawService {
           .where("status", isEqualTo: "approved")
           .get();
 
-      final paidIds =
-          payments.docs.map((e) => e["userId"]).toSet();
-
-      eligible =
-          eligible.where((r) => paidIds.contains(r.id)).toList();
+      final paidIds = payments.docs.map((e) => e["userId"]).toSet();
+      tickets = tickets.where((t) => paidIds.contains(t["userId"])).toList();
     }
 
-    if (eligible.length < winnerCount) {
-      throw Exception("Not enough eligible participants");
-    }
+    return tickets;
+  }
 
-    // 5. Shuffle & pick
-    eligible.shuffle(Random());
+  static Future<void> saveWinner(
+    String eventId,
+    Map<String, String> ticket,
+  ) async {
+    await FirebaseFirestore.instance
+        .collection("events")
+        .doc(eventId)
+        .collection("winners")
+        .doc(ticket["number"])
+        .set({
+          "userId": ticket["userId"],
+          "luckyNumber": ticket["number"],
+          "pickedAt": Timestamp.now(),
+          "pickedBy": FirebaseAuth.instance.currentUser!.uid,
+        });
+  }
 
-    final winners = eligible.take(winnerCount);
+  static Future<void> pickWinners(String eventId, int winnerCount) async {
+    final tickets = await getEligibleTickets(eventId);
 
-    // 6. Save winners
+    if (tickets.isEmpty) throw Exception("No eligible tickets");
+    if (tickets.length < winnerCount) throw Exception("Not enough tickets");
+
+    tickets.shuffle(Random());
+    final winners = tickets.take(winnerCount);
+
     for (final w in winners) {
-      final data = w.data() as Map<String, dynamic>;
-
-      await firestore
-          .collection("events")
-          .doc(eventId)
-          .collection("winners")
-          .doc(w.id)
-          .set({
-        "userId": w.id,
-        "luckyNumber": data["luckyNumber"],
-        "pickedAt": Timestamp.now(),
-        "pickedBy": FirebaseAuth.instance.currentUser!.uid,
-      });
+      await saveWinner(eventId, w);
     }
   }
 }

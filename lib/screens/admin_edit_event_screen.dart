@@ -4,10 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AdminEditEventScreen extends StatefulWidget {
   final String eventId;
 
-  const AdminEditEventScreen({
-    super.key,
-    required this.eventId,
-  });
+  const AdminEditEventScreen({super.key, required this.eventId});
 
   @override
   State<AdminEditEventScreen> createState() => _AdminEditEventScreenState();
@@ -31,29 +28,45 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
     _loadEvent();
   }
 
+  @override
+  void dispose() {
+    titleController.dispose();
+    dateController.dispose();
+    locationController.dispose();
+    deadlineController.dispose();
+    adultFeeController.dispose();
+    childFeeController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadEvent() async {
-    final doc = await FirebaseFirestore.instance
-        .collection("events")
-        .doc(widget.eventId)
-        .get();
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection("events")
+          .doc(widget.eventId)
+          .get();
 
-    if (!doc.exists) return;
+      if (!doc.exists) {
+        if (mounted) Navigator.pop(context);
+        return;
+      }
 
-    final data = doc.data()!;
+      final data = doc.data()!;
 
-    titleController.text = data["title"] ?? "";
-    dateController.text = data["date"] ?? "";
-    locationController.text = data["location"] ?? "";
-    deadlineController.text = data["deadline"] ?? "";
+      titleController.text = data["title"] ?? "";
+      dateController.text = data["date"] ?? "";
+      locationController.text = data["location"] ?? "";
+      deadlineController.text = data["deadline"] ?? "";
 
-    adultFeeController.text =
-        (data["adultFee"] ?? 0).toString();
-    childFeeController.text =
-        (data["childFee"] ?? 0).toString();
+      adultFeeController.text = (data["adultFee"] ?? 0).toString();
+      childFeeController.text = (data["childFee"] ?? 0).toString();
 
-    hasLuckyDraw = data["hasLuckyDraw"] == true;
-
-    setState(() => loading = false);
+      hasLuckyDraw = data["hasLuckyDraw"] == true;
+    } catch (e) {
+      debugPrint("Error loading event: $e");
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
   }
 
   Future<void> _save() async {
@@ -62,187 +75,199 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
         locationController.text.trim().isEmpty ||
         deadlineController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill required fields")),
+        SnackBar(
+          content: const Text("Please fill required fields"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
 
     setState(() => saving = true);
 
-    final adultFee =
-        double.tryParse(adultFeeController.text.trim()) ?? 0;
-    final childFee =
-        double.tryParse(childFeeController.text.trim()) ?? 0;
+    final adultFee = double.tryParse(adultFeeController.text.trim()) ?? 0;
+    final childFee = double.tryParse(childFeeController.text.trim()) ?? 0;
 
-    await FirebaseFirestore.instance
-        .collection("events")
-        .doc(widget.eventId)
-        .update({
-      "title": titleController.text.trim(),
-      "date": dateController.text.trim(),
-      "location": locationController.text.trim(),
-      "deadline": deadlineController.text.trim(),
-      "adultFee": adultFee,
-      "childFee": childFee,
-      "hasLuckyDraw": hasLuckyDraw,
-      "updatedAt": Timestamp.now(),
-    });
+    try {
+      await FirebaseFirestore.instance
+          .collection("events")
+          .doc(widget.eventId)
+          .update({
+            "title": titleController.text.trim(),
+            "date": dateController.text.trim(),
+            "location": locationController.text.trim(),
+            "deadline": deadlineController.text.trim(),
+            "adultFee": adultFee,
+            "childFee": childFee,
+            "hasLuckyDraw": hasLuckyDraw,
+            "updatedAt": Timestamp.now(),
+          });
 
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Event updated")),
-      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Event updated successfully")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: $e"),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFFF8FAFC);
-    const primary = Color(0xFF111827);
-    const accent = Color(0xFF374151);
-    const border = Color(0xFFE5E7EB);
-
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        title: const Text(
-          "Edit Event",
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: primary,
-        elevation: 0,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Edit Event"), centerTitle: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _section("Event Details"),
+            _sectionTitle(context, "Event Details"),
+            const SizedBox(height: 16),
 
-            _field(titleController, "Event Title *"),
-            _field(dateController, "Event Date *"),
-            _field(locationController, "Location *"),
-            _field(deadlineController, "Registration Deadline *"),
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: "Event Title *"),
+            ),
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: dateController,
+              readOnly: true,
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2101),
+                );
+                if (pickedDate != null) {
+                  String formattedDate =
+                      "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                  setState(() {
+                    dateController.text = formattedDate;
+                  });
+                }
+              },
+              decoration: const InputDecoration(labelText: "Event Date *"),
+            ),
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: locationController,
+              decoration: const InputDecoration(labelText: "Location *"),
+            ),
+            const SizedBox(height: 16),
+
+            TextField(
+              controller: deadlineController,
+              readOnly: true,
+              onTap: () async {
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2101),
+                );
+                if (pickedDate != null) {
+                  String formattedDate =
+                      "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                  setState(() {
+                    deadlineController.text = formattedDate;
+                  });
+                }
+              },
+              decoration: const InputDecoration(
+                labelText: "Registration Deadline *",
+              ),
+            ),
+            const SizedBox(height: 16),
 
             CheckboxListTile(
               value: hasLuckyDraw,
               onChanged: (v) => setState(() => hasLuckyDraw = v ?? false),
-              title: const Text(
-                "Enable Cabutan Bertuah",
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
+              title: const Text("Enable Cabutan Bertuah"),
+              contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
+              activeColor: Theme.of(context).colorScheme.primary,
             ),
 
-            const SizedBox(height: 24),
-            _section("Pricing (Optional)"),
+            const SizedBox(height: 32),
+            _sectionTitle(context, "Pricing (Optional)"),
+            const SizedBox(height: 16),
 
             Row(
               children: [
                 Expanded(
-                  child: _field(
-                    adultFeeController,
-                    "Adult Fee (RM)",
-                    type: TextInputType.number,
+                  child: TextField(
+                    controller: adultFeeController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: "Adult Fee (RM)",
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: _field(
-                    childFeeController,
-                    "Child Fee (RM)",
-                    type: TextInputType.number,
+                  child: TextField(
+                    controller: childFeeController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: "Child Fee (RM)",
+                    ),
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
 
             SizedBox(
               width: double.infinity,
-              height: 52,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: accent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  elevation: 0,
-                ),
                 onPressed: saving ? null : _save,
                 child: saving
                     ? const SizedBox(
-                        width: 22,
-                        height: 22,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        "Save Changes",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    : const Text("Save Changes"),
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  /// ===== UI HELPERS =====
-
-  Widget _section(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF111827),
-        ),
-      ),
-    );
-  }
-
-  Widget _field(
-    TextEditingController controller,
-    String label, {
-    TextInputType type = TextInputType.text,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: type,
-        decoration: InputDecoration(
-          labelText: label,
-          border: InputBorder.none,
-        ),
-      ),
+  Widget _sectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: Theme.of(
+        context,
+      ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }

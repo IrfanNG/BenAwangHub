@@ -13,33 +13,39 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const appBarColor = Color(0xFFF1F5F9); // light grey
-    const bgColor = Color(0xFFF8FAFC);
-    const cardColor = Colors.white;
-
-    const textPrimary = Color(0xFF111827);
-    const textSecondary = Color(0xFF6B7280);
-    const iconColor = Color(0xFF9CA3AF);
+    // Use theme values
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: Colors.white, // Pure white background
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 100,
+            expandedHeight: 120,
             pinned: true,
-            backgroundColor: appBarColor,
+            floating: false,
+            backgroundColor: Colors.white,
             elevation: 0,
-            title: const Text(
-              "BenAwang Hub",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: textPrimary,
+            centerTitle: false,
+            // Clean Bottom Border for AppBar when scrolled
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(color: Colors.grey.shade100, height: 1),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+              title: Text(
+                "BenAwang Hub",
+                style: TextStyle(
+                  color: Colors.black, // Stark black
+                  fontWeight: FontWeight.w800, // Extra bold
+                  fontSize: 24,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
-            iconTheme: const IconThemeData(color: textPrimary),
             actions: [
-              // ===== ADMIN ONLY =====
               FutureBuilder<bool>(
                 future: UserRoleService.isAdmin(),
                 builder: (context, snapshot) {
@@ -47,89 +53,106 @@ class HomeScreen extends StatelessWidget {
                   return Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const AdminCreateEventScreen(),
-                            ),
-                          );
-                        },
+                        icon: const Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.black,
+                        ),
+                        tooltip: 'Create Event',
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminCreateEventScreen(),
+                          ),
+                        ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.payments_outlined),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const AdminPaymentScreen(),
-                            ),
-                          );
-                        },
+                        icon: const Icon(
+                          Icons.payments_outlined,
+                          color: Colors.black,
+                        ),
+                        tooltip: 'Payments',
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AdminPaymentScreen(),
+                          ),
+                        ),
                       ),
                     ],
                   );
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.qr_code_scanner),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const QrScanScreen()),
-                  );
-                },
+                icon: const Icon(Icons.qr_code_scanner, color: Colors.black),
+                tooltip: 'Scan QR',
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QrScanScreen()),
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.account_circle),
-                onPressed: () {
-                  Navigator.push(
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.account_circle_outlined,
+                    color: Colors.black,
+                  ),
+                  tooltip: 'Profile',
+                  onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  );
-                },
+                  ),
+                ),
               ),
             ],
           ),
 
-          /// ===== HEADER =====
+          // Subheader
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     "Upcoming Events",
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade900,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    "Stay connected with family gatherings",
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: textSecondary,
-                    ),
+                    "Your family gatherings timeline",
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
               ),
             ),
           ),
 
-          /// ===== EVENT LIST =====
           FutureBuilder<bool>(
             future: UserRoleService.isAdmin(),
             builder: (context, adminSnap) {
               final isAdmin = adminSnap.data == true;
 
               return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection("events").snapshots(),
+                stream: FirebaseFirestore.instance
+                    .collection("events")
+                    .orderBy("date")
+                    .snapshots(),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          "Error loading events",
+                          style: TextStyle(color: colorScheme.error),
+                        ),
+                      ),
+                    );
+                  }
                   if (!snapshot.hasData) {
                     return const SliverFillRemaining(
                       child: Center(child: CircularProgressIndicator()),
@@ -137,215 +160,99 @@ class HomeScreen extends StatelessWidget {
                   }
 
                   if (snapshot.data!.docs.isEmpty) {
-                    return const SliverFillRemaining(
+                    return SliverFillRemaining(
                       child: Center(
-                        child: Text(
-                          "No events available",
-                          style: TextStyle(color: textSecondary),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.event_busy,
+                              size: 64,
+                              color: Colors.grey.shade200,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "No upcoming events",
+                              style: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
                   }
 
                   return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    padding: const EdgeInsets.only(bottom: 40),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final doc = snapshot.data!.docs[index];
-                          final data = doc.data() as Map<String, dynamic>;
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final doc = snapshot.data!.docs[index];
+                        final data = doc.data() as Map<String, dynamic>;
 
-                          return Dismissible(
-                            key: Key(doc.id),
-
-                            /// 👉 ADMIN ONLY SLIDE (BOTH SIDES)
-                            direction: isAdmin
-                                ? DismissDirection.horizontal
-                                : DismissDirection.none,
-
-                            /// 👉 EDIT BACKGROUND (SLIDE RIGHT)
-                            background: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.only(left: 24),
-                              alignment: Alignment.centerLeft,
-                              decoration: BoxDecoration(
-                                color: Colors.blueGrey.shade600,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.edit,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-
-                            /// 👉 DELETE BACKGROUND (SLIDE LEFT)
-                            secondaryBackground: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.only(right: 24),
-                              alignment: Alignment.centerRight,
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade600,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-
-                            /// 👉 INTERCEPT ACTION
-                            confirmDismiss: (direction) async {
-                              if (!isAdmin) return false;
-
-                              /// ===== EDIT =====
-                              if (direction == DismissDirection.startToEnd) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AdminEditEventScreen(eventId: doc.id),
-                                  ),
-                                );
-                                return false; // ❗ IMPORTANT: DO NOT DISMISS
-                              }
-
-                              /// ===== DELETE =====
-                              if (direction == DismissDirection.endToStart) {
-                                return await showDialog<bool>(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text("Delete Event"),
-                                    content: const Text(
-                                      "Are you sure you want to delete this event?\nThis action cannot be undone.",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, false),
-                                        child: const Text("Cancel"),
-                                      ),
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context, true),
-                                        child: const Text(
-                                          "Delete",
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-
+                        return Dismissible(
+                          key: Key(doc.id),
+                          direction: isAdmin
+                              ? DismissDirection.horizontal
+                              : DismissDirection.none,
+                          background: Container(color: Colors.blueGrey),
+                          secondaryBackground: Container(color: Colors.red),
+                          confirmDismiss: (direction) async {
+                            if (!isAdmin) return false;
+                            if (direction == DismissDirection.startToEnd) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      AdminEditEventScreen(eventId: doc.id),
+                                ),
+                              );
                               return false;
-                            },
-
-                            /// 👉 DELETE ACTION (ONLY WHEN CONFIRMED)
-                            onDismissed: (direction) async {
-                              if (direction == DismissDirection.endToStart) {
-                                await FirebaseFirestore.instance
-                                    .collection("events")
-                                    .doc(doc.id)
-                                    .delete();
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Event deleted")),
-                                );
-                              }
-                            },
-
-                            /// 👉 EVENT CARD (UNCHANGED)
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => EventDetailScreen(eventId: doc.id),
+                            }
+                            if (direction == DismissDirection.endToStart) {
+                              return await showDialog<bool>(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text("Delete Event"),
+                                  content: const Text(
+                                    "Are you sure you want to delete this event?",
                                   ),
-                                );
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: cardColor,
-                                  borderRadius: BorderRadius.circular(14),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Color(0x14000000),
-                                      blurRadius: 6,
-                                      offset: Offset(0, 3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("Cancel"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text(
+                                        "Delete",
+                                        style: TextStyle(color: Colors.red),
+                                      ),
                                     ),
                                   ],
                                 ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 42,
-                                      height: 42,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Icon(Icons.event, color: iconColor),
-                                    ),
-                                    const SizedBox(width: 14),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            data["title"] ?? "Untitled Event",
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: textPrimary,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.calendar_today,
-                                                  size: 13, color: iconColor),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                data["date"] ?? "TBA",
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: textSecondary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.location_on,
-                                                  size: 13, color: iconColor),
-                                              const SizedBox(width: 4),
-                                              Expanded(
-                                                child: Text(
-                                                  data["location"] ?? "TBA",
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: textSecondary,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(Icons.chevron_right, color: iconColor),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        childCount: snapshot.data!.docs.length,
-                      ),
+                              );
+                            }
+                            return false;
+                          },
+                          onDismissed: (_) async {
+                            await FirebaseFirestore.instance
+                                .collection("events")
+                                .doc(doc.id)
+                                .delete();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Event deleted")),
+                            );
+                          },
+                          child: _EventTile(data: data, docId: doc.id),
+                        );
+                      }, childCount: snapshot.data!.docs.length),
                     ),
                   );
                 },
@@ -353,6 +260,171 @@ class HomeScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EventTile extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final String docId;
+
+  const _EventTile({required this.data, required this.docId});
+
+  @override
+  Widget build(BuildContext context) {
+    // Parse date if possible or just use string
+    String day = "";
+    String month = "";
+    if (data["date"] != null) {
+      try {
+        final d = DateTime.parse(data["date"]);
+        day = d.day.toString();
+        // Month abbreviation
+        const months = [
+          "JAN",
+          "FEB",
+          "MAR",
+          "APR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AUG",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DEC",
+        ];
+        month = months[d.month - 1];
+      } catch (e) {
+        day = "--";
+        month = "---";
+      }
+    }
+
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => EventDetailScreen(eventId: docId)),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade300), // Visible border
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date Column
+            Container(
+              width: 50,
+              padding: const EdgeInsets.only(top: 2),
+              child: Column(
+                children: [
+                  Text(
+                    month,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600, // Darker contrast
+                    ),
+                  ),
+                  Text(
+                    day,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data["title"] ?? "Untitled Event",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Colors.grey.shade600, // Darker
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        data["date"] ?? "TBA",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade700, // Darker
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: Colors.grey.shade600, // Darker
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          data["location"] ?? "TBA",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade700, // Darker
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Chevron
+            const Padding(
+              padding: EdgeInsets.only(top: 12.0),
+              child: Icon(
+                Icons.chevron_right,
+                color: Color(0xFF9CA3AF),
+              ), // Darker
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -20,18 +20,23 @@ class _LoginScreenState extends State<LoginScreen>
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 800),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeOut,
     );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
     _animationController.forward();
   }
 
@@ -47,7 +52,10 @@ class _LoginScreenState extends State<LoginScreen>
     if (emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
+        SnackBar(
+          content: const Text("Please fill in all fields"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
       return;
     }
@@ -62,23 +70,17 @@ class _LoginScreenState extends State<LoginScreen>
         );
 
         final uid = cred.user!.uid;
-
-        // 🔒 CHECK DALAM FIRESTORE
         final userDoc = await FirebaseFirestore.instance
             .collection("users")
             .doc(uid)
             .get();
 
         if (!userDoc.exists) {
-          // 🚨 USER TAK REGISTER DALAM SISTEM
           await FirebaseAuth.instance.signOut();
-
           throw Exception("This email is not registered in the system");
         }
-
       } else {
-        var cred = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
+        var cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
@@ -87,11 +89,11 @@ class _LoginScreenState extends State<LoginScreen>
             .collection("users")
             .doc(cred.user!.uid)
             .set({
-          "email": emailController.text.trim(),
-          "name": emailController.text.split("@")[0],
-          "role": "user",
-          "createdAt": FieldValue.serverTimestamp(),
-        });
+              "email": emailController.text.trim(),
+              "name": emailController.text.split("@")[0],
+              "role": "user",
+              "createdAt": FieldValue.serverTimestamp(),
+            });
       }
 
       if (mounted) {
@@ -104,7 +106,12 @@ class _LoginScreenState extends State<LoginScreen>
       setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Theme.of(context)
+                .colorScheme
+                .primary, // Using primary for info/errors sometimes cleaner or error color
+          ),
         );
       }
     }
@@ -112,177 +119,155 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    const bgColor = Color(0xFFF8FAFC);
-    const cardColor = Colors.white;
-    const textPrimary = Color(0xFF111827);
-    const textSecondary = Color(0xFF6B7280);
-    const accent = Color(0xFF374151);
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  /// LOGO
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: const Icon(
-                      Icons.family_restroom,
-                      size: 56,
-                      color: accent,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    "BenAwang Hub",
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    isLogin ? "Sign in to continue" : "Create your account",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: textSecondary,
-                    ),
-                  ),
-
-                  const SizedBox(height: 36),
-
-                  /// CARD
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x14000000),
-                          blurRadius: 12,
-                          offset: Offset(0, 6),
-                        )
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _field(
-                          controller: emailController,
-                          label: "Email",
-                          icon: Icons.email_outlined,
+      body: Stack(
+        children: [
+          // Background Gradient or Design Element
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: size.height * 0.4,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
+              child: SafeArea(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(height: 16),
-                        _field(
-                          controller: passwordController,
-                          label: "Password",
-                          icon: Icons.lock_outline,
-                          obscureText: true,
+                        child: const Icon(
+                          Icons.family_restroom,
+                          size: 64,
+                          color: Colors.white,
                         ),
-                        const SizedBox(height: 28),
-
-                        /// BUTTON
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: accent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: isLoading ? null : submit,
-                            child: isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  )
-                                : Text(
-                                    isLogin ? "Login" : "Register",
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "BenAwang Hub",
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-
-                        const SizedBox(height: 18),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              isLogin
-                                  ? "No account?"
-                                  : "Already registered?",
-                              style: const TextStyle(color: textSecondary),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                setState(() => isLogin = !isLogin);
-                                _animationController
-                                  ..reset()
-                                  ..forward();
-                              },
-                              child: const Text(
-                                "Switch",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: accent,
-                                ),
-                              ),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Connect with your family",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
 
-  Widget _field({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscureText = false,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: const Color(0xFFF9FAFB),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
+          // Login/Register Form
+          Positioned.fill(
+            top: size.height * 0.35,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Card(
+                      elevation: 8,
+                      shadowColor: Colors.black12,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              isLogin ? "Welcome Back" : "Create Account",
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            TextField(
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              decoration: const InputDecoration(
+                                labelText: "Email",
+                                prefixIcon: Icon(Icons.email_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: passwordController,
+                              obscureText: true,
+                              decoration: const InputDecoration(
+                                labelText: "Password",
+                                prefixIcon: Icon(Icons.lock_outline),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            // SizedBox removed to allow button to size based on theme padding
+                            ElevatedButton(
+                              onPressed: isLoading ? null : submit,
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(isLogin ? "Login" : "Register"),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  isLogin
+                                      ? "No account?"
+                                      : "Already registered?",
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    setState(() => isLogin = !isLogin);
+                                    _animationController.reset();
+                                    _animationController.forward();
+                                  },
+                                  child: Text(
+                                    isLogin ? "Register now" : "Login",
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

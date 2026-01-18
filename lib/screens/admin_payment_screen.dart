@@ -71,20 +71,17 @@ class AdminPaymentScreen extends StatelessWidget {
               return SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final doc = snapshot.data!.docs[index];
-                      final data = doc.data() as Map<String, dynamic>;
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final doc = snapshot.data!.docs[index];
+                    final data = doc.data() as Map<String, dynamic>;
 
-                      return _PaymentCard(
-                        paymentId: doc.id,
-                        userId: data["userId"],
-                        amount: data["amount"],
-                        timestamp: data["timestamp"],
-                      );
-                    },
-                    childCount: snapshot.data!.docs.length,
-                  ),
+                    return _PaymentCard(
+                      paymentId: doc.id,
+                      userId: data["userId"],
+                      amount: data["amount"],
+                      timestamp: data["timestamp"],
+                    );
+                  }, childCount: snapshot.data!.docs.length),
                 ),
               );
             },
@@ -123,7 +120,6 @@ class _PaymentCardState extends State<_PaymentCard> {
     const success = Color(0xFF16A34A);
     final amount = widget.amount.toDouble();
 
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -160,10 +156,7 @@ class _PaymentCardState extends State<_PaymentCard> {
                   const SizedBox(height: 2),
                   Text(
                     user["email"] ?? "",
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: secondary,
-                    ),
+                    style: const TextStyle(fontSize: 13, color: secondary),
                   ),
                 ],
               );
@@ -176,12 +169,9 @@ class _PaymentCardState extends State<_PaymentCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Amount",
-                style: TextStyle(color: secondary),
-              ),
-                Text(
-                  "RM ${amount.toStringAsFixed(2)}",
+              const Text("Amount", style: TextStyle(color: secondary)),
+              Text(
+                "RM ${amount.toStringAsFixed(2)}",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -204,7 +194,7 @@ class _PaymentCardState extends State<_PaymentCard> {
           /// APPROVE BUTTON
           SizedBox(
             width: double.infinity,
-            height: 44,
+            // Removed fixed height constraint
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: success,
@@ -226,8 +216,7 @@ class _PaymentCardState extends State<_PaymentCard> {
                       width: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Text(

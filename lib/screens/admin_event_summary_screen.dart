@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'admin_attendance_screen.dart';
-import '../services/lucky_draw_service.dart';
+import 'lucky_draw_screen.dart';
 
 class AdminEventSummaryScreen extends StatefulWidget {
   final String eventId;
@@ -32,11 +32,11 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFFF8FAFC);
-    const card = Colors.white;
-    const primary = Color(0xFF111827);
-    const border = Color(0xFFE5E7EB);
+    const bg = Colors.white; // Pure white background
+    // const card = Colors.white; // Not used if we remove cards
+    // const primary = Color(0xFF111827); // Dark Slate
 
     return Scaffold(
       backgroundColor: bg,
@@ -64,7 +64,7 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
 
               final paidUsers = {
                 for (var p in paySnap.data!.docs)
-                  (p.data() as Map<String, dynamic>)["userId"]: true
+                  (p.data() as Map<String, dynamic>)["userId"]: true,
               };
 
               int totalAdults = 0;
@@ -84,82 +84,172 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                   const SliverAppBar(
                     pinned: true,
                     backgroundColor: Colors.white,
-                    foregroundColor: primary,
+                    foregroundColor: Colors.black,
                     elevation: 0,
+                    centerTitle: true,
                     title: Text(
                       "Event Summary",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                      ),
                     ),
                   ),
 
                   /// CONTENT
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// CHECK-IN
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: card,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: border),
-                            ),
-                            child: StreamBuilder<DocumentSnapshot>(
-                              stream: FirebaseFirestore.instance
-                                  .collection("events")
-                                  .doc(widget.eventId)
-                                  .snapshots(),
-                              builder: (context, snap) {
-                                if (!snap.hasData ||
-                                    snap.data!.data() == null) {
-                                  return const SizedBox();
-                                }
+                          /// CHECK-IN SECTION
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection("events")
+                                .doc(widget.eventId)
+                                .snapshots(),
+                            builder: (context, snap) {
+                              if (!snap.hasData || snap.data!.data() == null) {
+                                return const SizedBox();
+                              }
 
-                                final event =
-                                    snap.data!.data() as Map<String, dynamic>;
-                                final isActive =
-                                    event["checkInActive"] == true;
+                              final event =
+                                  snap.data!.data() as Map<String, dynamic>;
+                              final isActive = event["checkInActive"] == true;
 
-                                if (!isActive) {
-                                  return _primaryButton(
-                                    label: "Start Check-In",
-                                    icon: Icons.qr_code,
-                                    onPressed: () async {
-                                      await FirebaseFirestore.instance
-                                          .collection("events")
-                                          .doc(widget.eventId)
-                                          .update({
-                                        "checkInActive": true,
-                                        "winnerCount": winnerCount,
-                                      });
-                                    },
-                                  );
-                                }
+                              if (!isActive) {
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(32),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.qr_code_scanner,
+                                        size: 48,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        "Ready to start?",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.black,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            await FirebaseFirestore.instance
+                                                .collection("events")
+                                                .doc(widget.eventId)
+                                                .update({
+                                                  "checkInActive": true,
+                                                  "winnerCount": winnerCount,
+                                                });
+                                          },
+                                          child: const Text("Start Check-In"),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
 
-                                return buildAdminQR(widget.eventId);
-                              },
-                            ),
+                              return Center(
+                                child: buildAdminQR(widget.eventId),
+                              );
+                            },
                           ),
 
+                          const SizedBox(height: 32),
+
+                          /// STATS GRID
+                          const Text(
+                            "Overview",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 16),
 
-                          /// ATTENDANCE
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey.shade800,
-                              foregroundColor: Colors.white,
-                              minimumSize:
-                                  const Size(double.infinity, 48),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _StatCard(
+                                  label: "Adults",
+                                  value: totalAdults.toString(),
+                                  icon: Icons.person,
+                                ),
                               ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _StatCard(
+                                  label: "Kids",
+                                  value: totalKids.toString(),
+                                  icon: Icons.child_care,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _StatCard(
+                                  label: "Total Guests",
+                                  value: (totalAdults + totalKids).toString(),
+                                  icon: Icons.groups,
+                                  highlight: true,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _StatCard(
+                                  label: "Paid",
+                                  value:
+                                      "$paidCount/${regSnap.data!.docs.length}",
+                                  icon: Icons.payments,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          /// ACTIONS LIST
+                          const Text(
+                            "Actions",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            icon: const Icon(Icons.fact_check),
-                            label: const Text("View Attendance List"),
-                            onPressed: () {
+                          ),
+                          const SizedBox(height: 16),
+
+                          _ActionTile(
+                            icon: Icons.list_alt,
+                            title: "View Attendance List",
+                            subtitle: "Check who is here",
+                            onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -170,120 +260,20 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                               );
                             },
                           ),
-
-                          const SizedBox(height: 24),
-
-                          /// STATS
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatCard(
-                                  label: "Adults",
-                                  value: totalAdults.toString(),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _StatCard(
-                                  label: "Kids",
-                                  value: totalKids.toString(),
-                                ),
-                              ),
-                            ],
-                          ),
                           const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatCard(
-                                  label: "Total People",
-                                  value:
-                                      (totalAdults + totalKids).toString(),
+                          _ActionTile(
+                            icon: Icons.casino,
+                            title: "Lucky Draw Room",
+                            subtitle: "Run the lucky draw",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      LuckyDrawScreen(eventId: widget.eventId),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _StatCard(
-                                  label: "Paid",
-                                  value:
-                                      "$paidCount/${regSnap.data!.docs.length}",
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          /// 🎯 WINNER SETTING
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: card,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: border),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text(
-                                      "Number of Winners",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                    const Spacer(),
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: () {
-                                        if (winnerCount > 1) {
-                                          setState(() => winnerCount--);
-                                        }
-                                      },
-                                    ),
-                                    Text(
-                                      winnerCount.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add),
-                                      onPressed: () {
-                                        setState(() => winnerCount++);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                _primaryButton(
-                                  label: "Pick Winners",
-                                  icon: Icons.emoji_events,
-                                  onPressed: () async {
-                                    try {
-                                      await LuckyDrawService.pickWinners(
-                                        widget.eventId,
-                                        winnerCount,
-                                      );
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              "🎉 Winners picked successfully"),
-                                        ),
-                                      );
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(e.toString()),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -299,61 +289,111 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
   }
 }
 
-/// ===== STAT CARD =====
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
+  final IconData icon;
+  final bool highlight;
 
-  const _StatCard({required this.label, required this.value});
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.highlight = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: highlight ? Colors.black : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 20, color: highlight ? Colors.white70 : Colors.grey),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 22,
+            style: TextStyle(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: highlight ? Colors.white : Colors.black,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(label,
-              style: const TextStyle(color: Color(0xFF6B7280))),
+          Text(
+            label,
+            style: TextStyle(
+              color: highlight ? Colors.white54 : Colors.grey,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// ===== BUTTON =====
-Widget _primaryButton({
-  required String label,
-  required IconData icon,
-  required VoidCallback onPressed,
-}) {
-  return SizedBox(
-    width: double.infinity,
-    height: 48,
-    child: ElevatedButton.icon(
-      icon: Icon(icon),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF374151),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.black),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade300),
+          ],
         ),
       ),
-      onPressed: onPressed,
-    ),
-  );
+    );
+  }
 }
