@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "542370963010",
+    "project_id": "benawanghub",
+    "storage_bucket": "benawanghub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542370963010:android:3bdc90e8972852e3f797db",
+        "android_client_info": {
+          "package_name": "com.benawang.hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNn5o4v8ma8-pejARL4iQrQ7NH9FmaSdI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542370963010:android:b43cbd389487e914f797db",
+        "android_client_info": {
+          "package_name": "com.example.benawanghub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNn5o4v8ma8-pejARL4iQrQ7NH9FmaSdI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
