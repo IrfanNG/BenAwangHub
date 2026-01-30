@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Flutter/Dart
 .dart_tool/
 .flutter-plugins
@@ -18,3 +19,33 @@ hs_err_pid*
 # OS
 .DS_Store
 Thumbs.db
+=======
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Android
+android/.gradle/
+android/app/debug
+android/app/profile
+android/app/release
+*.jks
+key.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+
+# Firebase
+firebase-debug.log
+.firebaserc
+.firebase/
+
+# Env / secrets
+.env
+.env.*
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1

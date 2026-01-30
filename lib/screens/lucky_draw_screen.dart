@@ -45,11 +45,18 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
       });
     } catch (e) {
       setState(() => isLoading = false);
+<<<<<<< HEAD
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error: $e")));
       }
+=======
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
     }
   }
 
@@ -103,11 +110,18 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
         _showWinnerDialog(winnerTicket["number"]!);
       }
     } catch (e) {
+<<<<<<< HEAD
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error saving winner: $e")));
       }
+=======
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Error saving winner: $e")));
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
     }
   }
 

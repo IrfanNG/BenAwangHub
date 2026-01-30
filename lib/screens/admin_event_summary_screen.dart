@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+<<<<<<< HEAD
+=======
+import 'package:qr_flutter/qr_flutter.dart';
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
 import 'admin_attendance_screen.dart';
 import 'lucky_draw_screen.dart';
 
@@ -16,6 +20,7 @@ class AdminEventSummaryScreen extends StatefulWidget {
 class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
   int winnerCount = 1;
 
+<<<<<<< HEAD
   /// ===== ADMIN CHECK-IN CODE =====
   Widget buildAdminCheckInCode(String code) {
     return Column(
@@ -36,11 +41,23 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
             color: Color(0xFF6B7280),
             fontWeight: FontWeight.w500,
           ),
+=======
+  /// ===== ADMIN QR =====
+  Widget buildAdminQR(String eventId) {
+    return Column(
+      children: [
+        QrImageView(data: eventId, size: 200),
+        const SizedBox(height: 8),
+        const Text(
+          "Scan this QR to check in",
+          style: TextStyle(color: Color(0xFF6B7280)),
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
         ),
       ],
     );
   }
 
+<<<<<<< HEAD
   String _generateCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid ambiguous chars
     final rnd = DateTime.now().millisecondsSinceEpoch;
@@ -50,6 +67,9 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
     }).join();
   }
 
+=======
+  @override
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
   @override
   Widget build(BuildContext context) {
     const bg = Colors.white; // Pure white background
@@ -180,8 +200,11 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                                                 .doc(widget.eventId)
                                                 .update({
                                                   "checkInActive": true,
+<<<<<<< HEAD
                                                   "checkInCode":
                                                       _generateCode(),
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
                                                   "winnerCount": winnerCount,
                                                 });
                                           },
@@ -194,9 +217,13 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                               }
 
                               return Center(
+<<<<<<< HEAD
                                 child: buildAdminCheckInCode(
                                   event["checkInCode"] ?? "------",
                                 ),
+=======
+                                child: buildAdminQR(widget.eventId),
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
                               );
                             },
                           ),

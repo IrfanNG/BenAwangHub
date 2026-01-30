@@ -22,7 +22,10 @@ class RegistrationService {
     required int kids,
     required double adultFee,
     required double childFee,
+<<<<<<< HEAD
     required String? familyName,
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
   }) async {
     /// 1️⃣ Get event data
     final eventDoc = await FirebaseFirestore.instance
@@ -47,11 +50,14 @@ class RegistrationService {
     }
 
     /// 4️⃣ Save registration
+<<<<<<< HEAD
     String status = "registered";
     if (!isFreeEvent) {
       status = "pending_payment";
     }
 
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
     await FirebaseFirestore.instance
         .collection("events")
         .doc(eventId)
@@ -61,8 +67,12 @@ class RegistrationService {
           "adults": adults,
           "kids": kids,
           "total": total,
+<<<<<<< HEAD
           "status": status,
           "familyName": familyName,
+=======
+          "status": "registered",
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
           "luckyNumbers": luckyNumbers, // List of strings
           "createdAt": FieldValue.serverTimestamp(),
         });

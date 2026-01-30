@@ -19,6 +19,7 @@ class EventDetailScreen extends StatefulWidget {
 class _EventDetailScreenState extends State<EventDetailScreen> {
   int adults = 1;
   int kids = 0;
+<<<<<<< HEAD
   final TextEditingController _codeController = TextEditingController();
   bool _isCheckingIn = false;
 
@@ -37,6 +38,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     _codeController.dispose();
     super.dispose();
   }
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +183,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               const Divider(height: 1),
               const SizedBox(height: 32),
 
+<<<<<<< HEAD
               /// REGISTRATION SECTION
               StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance
@@ -498,6 +502,118 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               const SizedBox(height: 24),
 
               const SizedBox(height: 24),
+=======
+              Text(
+                "Who's attending?",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade900,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              _counter("Adults", adults, () {
+                if (adults > 1) setState(() => adults--);
+              }, () => setState(() => adults++)),
+
+              const SizedBox(height: 16),
+
+              _counter("Kids", kids, () {
+                if (kids > 0) setState(() => kids--);
+              }, () => setState(() => kids++)),
+
+              const SizedBox(height: 32),
+
+              /// TOTAL (PAID EVENT ONLY)
+              if (isPaidEvent) ...[
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Total Amount",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        "RM ${total.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+
+              /// REGISTER BUTTON
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(27),
+                    ),
+                  ),
+                  onPressed: () => _handleRegistration(
+                    context,
+                    adultFee,
+                    childFee,
+                    widget.eventId,
+                  ),
+                  child: const Text(
+                    "Confirm Registration",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              /// PAYMENT BUTTON
+              if (isPaidEvent)
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(27),
+                      ),
+                    ),
+                    onPressed: () =>
+                        _handlePayment(context, total, widget.eventId),
+                    child: const Text(
+                      "I Have Paid",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 32),
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
 
               /// LUCKY NUMBER SECTION
               _buildLuckyNumberSection(context),
@@ -604,6 +720,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ).showSnackBar(const SnackBar(content: Text("Please login first")));
       return;
     }
+<<<<<<< HEAD
 
     if (_selectedFamily == null) {
       ScaffoldMessenger.of(
@@ -611,6 +728,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ).showSnackBar(const SnackBar(content: Text("Please select a family")));
       return;
     }
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
     try {
       await RegistrationService.register(
         eventId: eventId,
@@ -619,7 +738,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         kids: kids,
         adultFee: adultFee,
         childFee: childFee,
+<<<<<<< HEAD
         familyName: _selectedFamily,
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -664,6 +786,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 
+<<<<<<< HEAD
   Widget _buildCheckInSection(
     BuildContext context,
     Map<String, dynamic> event,
@@ -828,6 +951,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 
+=======
+>>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
   Widget _buildLuckyNumberSection(BuildContext context) {
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance
