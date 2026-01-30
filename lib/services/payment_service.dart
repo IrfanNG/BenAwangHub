@@ -62,12 +62,9 @@ class PaymentService {
         .collection("registrations")
         .doc(userId);
 
-<<<<<<< HEAD
     // Update registration status to 'registered' upon payment approval
     await regRef.update({"status": "registered"});
 
-=======
->>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
     final regSnap = await regRef.get();
     if (!regSnap.exists) return;
 

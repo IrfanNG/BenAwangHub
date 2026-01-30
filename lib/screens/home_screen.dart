@@ -5,10 +5,6 @@ import 'event_detail_screen.dart';
 import 'admin_payment_screen.dart';
 import 'profile_screen.dart';
 import '../services/user_role_service.dart';
-<<<<<<< HEAD
-=======
-import 'qr_scan_screen.dart';
->>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
 import 'admin_edit_event_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -85,17 +81,6 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
               ),
-<<<<<<< HEAD
-=======
-              IconButton(
-                icon: const Icon(Icons.qr_code_scanner, color: Colors.black),
-                tooltip: 'Scan QR',
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const QrScanScreen()),
-                ),
-              ),
->>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: IconButton(

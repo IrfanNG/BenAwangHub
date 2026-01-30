@@ -23,18 +23,10 @@ class AppTheme {
         secondary:
             primaryColor, // Use primary for secondary to keep it monochrome/premium
         surface: surfaceColor,
-<<<<<<< HEAD
-=======
-        background: Colors.white,
->>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: textPrimary,
-<<<<<<< HEAD
-=======
-        onBackground: textPrimary,
->>>>>>> a9715c3b08abbe02e217ceee16cfbb2ddd07cbb1
         outline: Colors.grey.shade300,
       ),
       scaffoldBackgroundColor: Colors.white, // Meta apps are usually pure white
