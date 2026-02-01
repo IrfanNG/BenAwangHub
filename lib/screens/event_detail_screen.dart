@@ -471,7 +471,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               }
 
                               return DropdownButtonFormField<String>(
-                                value: _selectedFamily,
+                                initialValue: _selectedFamily,
                                 decoration: InputDecoration(
                                   hintText: "Select Family",
                                   border: OutlineInputBorder(
@@ -903,13 +903,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           .doc(user.uid)
           .update({"checkedInAt": FieldValue.serverTimestamp()});
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Check-in successful!")));
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("Error: $e")));

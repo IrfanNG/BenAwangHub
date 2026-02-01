@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../services/event_service.dart';
 
 class AdminCreateEventScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
 
   bool isCreating = false;
   bool hasLuckyDraw = false;
-  List<String> _tempFamilies = [];
+  final List<String> _tempFamilies = [];
 
   @override
   void dispose() {

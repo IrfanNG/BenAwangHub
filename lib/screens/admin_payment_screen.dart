@@ -10,8 +10,6 @@ class AdminPaymentScreen extends StatelessWidget {
     const bg = Color(0xFFF8FAFC);
     const primary = Color(0xFF111827);
     const secondary = Color(0xFF6B7280);
-    const accent = Color(0xFF374151);
-    const border = Color(0xFFE5E7EB);
 
     return Scaffold(
       backgroundColor: bg,
