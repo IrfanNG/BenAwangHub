@@ -117,135 +117,154 @@ class AdminAttendanceScreen extends StatelessWidget {
                 ),
               ),
 
-              // Grouped Grid by Family
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.85, // Adjust for card height
-                  ),
-                  itemCount: 6, // 6 families
-                  itemBuilder: (context, index) {
-                    final families = [
-                      "Makngah biah",
-                      "Pak Long",
-                      "Mak Su",
-                      "Pak Ngah",
-                      "Tok Wan",
-                      "Opah",
-                    ];
-                    final familyName = families[index];
-
-                    // Filter registrations for this family
-                    final familyRegs = registrations.where((doc) {
-                      final d = doc.data() as Map<String, dynamic>;
-                      return d["familyName"] == familyName;
-                    }).toList();
-
-                    // Calculate totals (Pax)
-                    int famTotalPax = 0;
-                    int famAttendedPax = 0;
-
-                    for (var r in familyRegs) {
-                      final d = r.data() as Map<String, dynamic>;
-                      final int pax =
-                          ((d["adults"] ?? 0) as int) +
-                          ((d["kids"] ?? 0) as int);
-                      famTotalPax += pax;
-
-                      if (d["checkedInAt"] != null) {
-                        famAttendedPax += pax;
-                      }
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("events")
+                      .doc(eventId)
+                      .snapshots(),
+                  builder: (context, eventSnap) {
+                    if (!eventSnap.hasData) {
+                      return const Center(child: CircularProgressIndicator());
                     }
 
-                    final int famNotCheckedIn = famTotalPax - famAttendedPax;
+                    final eventData =
+                        eventSnap.data!.data() as Map<String, dynamic>?;
+                    final List<String> familyList =
+                        eventData != null && eventData["families"] != null
+                        ? List<String>.from(eventData["families"])
+                        : [];
 
-                    return Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AdminFamilyMembersScreen(
-                                familyName: familyName,
-                                registrations: familyRegs,
+                    if (familyList.isEmpty) {
+                      return const Center(
+                        child: Text("No categories found in this event"),
+                      );
+                    }
+
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.85,
+                          ),
+                      itemCount: familyList.length,
+                      itemBuilder: (context, index) {
+                        final familyName = familyList[index];
+
+                        // Filter registrations for this family
+                        final familyRegs = registrations.where((doc) {
+                          final d = doc.data() as Map<String, dynamic>;
+                          return d["familyName"] == familyName;
+                        }).toList();
+
+                        // Calculate totals (Pax)
+                        int famTotalPax = 0;
+                        int famAttendedPax = 0;
+
+                        for (var r in familyRegs) {
+                          final d = r.data() as Map<String, dynamic>;
+                          final int pax =
+                              ((d["adults"] ?? 0) as int) +
+                              ((d["kids"] ?? 0) as int);
+                          famTotalPax += pax;
+
+                          if (d["checkedInAt"] != null) {
+                            famAttendedPax += pax;
+                          }
+                        }
+
+                        final int famNotCheckedIn =
+                            famTotalPax - famAttendedPax;
+
+                        return Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => AdminFamilyMembersScreen(
+                                    familyName: familyName,
+                                    registrations: familyRegs,
+                                  ),
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.family_restroom,
+                                      color: Colors.blue.shade700,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    familyName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "$famAttendedPax/$famTotalPax Checked in",
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "$famNotCheckedIn Not checked in",
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.red.shade400,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.family_restroom,
-                                  color: Colors.blue.shade700,
-                                  size: 24,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                familyName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "$famAttendedPax/$famTotalPax Checked in",
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "$famNotCheckedIn Not checked in",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.red.shade400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 ),

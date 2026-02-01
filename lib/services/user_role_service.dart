@@ -15,4 +15,25 @@ class UserRoleService {
 
     return doc["role"] == "admin";
   }
+
+  static Future<void> assignAdminRole(String userId) async {
+    await FirebaseFirestore.instance.collection("users").doc(userId).update({
+      "role": "admin",
+    });
+  }
+
+  static Future<void> removeAdminRole(String userId) async {
+    await FirebaseFirestore.instance.collection("users").doc(userId).update({
+      "role": "user",
+    });
+  }
+
+  static Future<String> getUserRole(String userId) async {
+    var doc = await FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .get();
+    if (!doc.exists) return "user";
+    return doc["role"] ?? "user";
+  }
 }

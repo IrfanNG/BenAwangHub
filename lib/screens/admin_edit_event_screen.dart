@@ -21,6 +21,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
   bool hasLuckyDraw = false;
   bool loading = true;
   bool saving = false;
+  List<String> _tempFamilies = [];
 
   @override
   void initState() {
@@ -62,6 +63,10 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
       childFeeController.text = (data["childFee"] ?? 0).toString();
 
       hasLuckyDraw = data["hasLuckyDraw"] == true;
+
+      if (data["families"] != null) {
+        _tempFamilies = List<String>.from(data["families"]);
+      }
     } catch (e) {
       debugPrint("Error loading event: $e");
     } finally {
@@ -100,6 +105,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
             "adultFee": adultFee,
             "childFee": childFee,
             "hasLuckyDraw": hasLuckyDraw,
+            "families": _tempFamilies,
             "updatedAt": Timestamp.now(),
           });
 
@@ -205,10 +211,22 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
               activeColor: Theme.of(context).colorScheme.primary,
             ),
 
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () => _showManageCategoriesDialog(context),
+              icon: const Icon(Icons.category),
+              label: const Text("Manage Categories"),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                side: const BorderSide(color: Colors.grey),
+              ),
+            ),
+
             const SizedBox(height: 32),
             _sectionTitle(context, "Pricing (Optional)"),
             const SizedBox(height: 16),
 
+            // ... (rest of build) ...
             Row(
               children: [
                 Expanded(
@@ -268,6 +286,95 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
       style: Theme.of(
         context,
       ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+
+  void _showManageCategoriesDialog(BuildContext context) {
+    final TextEditingController newCatController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text("Manage Categories"),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 400,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: newCatController,
+                          decoration: const InputDecoration(
+                            hintText: "New Category Name",
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.add_circle,
+                          color: Colors.black,
+                          size: 32,
+                        ),
+                        onPressed: () {
+                          if (newCatController.text.trim().isNotEmpty) {
+                            setDialogState(() {
+                              _tempFamilies.add(newCatController.text.trim());
+                              newCatController.clear();
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  Expanded(
+                    child: _tempFamilies.isEmpty
+                        ? const Center(child: Text("No categories added yet"))
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: _tempFamilies.length,
+                            separatorBuilder: (c, i) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final name = _tempFamilies[index];
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(name),
+                                trailing: IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    setDialogState(() {
+                                      _tempFamilies.removeAt(index);
+                                    });
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Done"),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

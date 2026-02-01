@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'about_app_screen.dart';
+import '../services/user_role_service.dart';
+import 'admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -188,6 +190,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             /// SETTINGS LIST
             _sectionHeader("Account Settings"),
+
+            FutureBuilder<bool>(
+              future: UserRoleService.isAdmin(),
+              builder: (context, snapshot) {
+                if (snapshot.data != true) return const SizedBox();
+                return _profileItem(
+                  icon: Icons.dashboard_outlined,
+                  title: "Admin Dashboard",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminDashboardScreen(),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+
             _profileItem(
               icon: Icons.person_outline,
               title: "Personal Details",

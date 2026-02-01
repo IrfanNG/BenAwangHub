@@ -21,16 +21,31 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   int kids = 0;
   final TextEditingController _codeController = TextEditingController();
   bool _isCheckingIn = false;
-
   String? _selectedFamily;
-  final List<String> _families = [
-    "Makngah biah",
-    "Pak Long",
-    "Mak Su",
-    "Pak Ngah",
-    "Tok Wan",
-    "Opah",
-  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureDefaultFamilies();
+  }
+
+  Future<void> _ensureDefaultFamilies() async {
+    final ref = FirebaseFirestore.instance.collection('families');
+    final snap = await ref.limit(1).get();
+    if (snap.docs.isEmpty) {
+      final defaults = [
+        "Makngah biah",
+        "Pak Long",
+        "Mak Su",
+        "Pak Ngah",
+        "Tok Wan",
+        "Opah",
+      ];
+      for (final f in defaults) {
+        await ref.add({'name': f});
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -40,6 +55,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ... header code ...
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -83,6 +99,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(24),
             children: [
+              // ... existing header components ...
               /// HEADER INFO
               Text(
                 data["title"] ?? "Untitled",
@@ -181,313 +198,416 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               const SizedBox(height: 32),
 
               /// REGISTRATION SECTION
-              StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection("events")
-                    .doc(widget.eventId)
-                    .collection("registrations")
-                    .doc(FirebaseAuth.instance.currentUser?.uid)
-                    .snapshots(),
-                builder: (context, regSnap) {
-                  final isRegistered = regSnap.hasData && regSnap.data!.exists;
+              // ... keep existing registration logic ...
+              FutureBuilder<bool>(
+                future: UserRoleService.isAdmin(),
+                builder: (context, adminSnap) {
+                  final isAdmin = adminSnap.data == true;
 
-                  if (isRegistered) {
-                    final regData =
-                        regSnap.data!.data() as Map<String, dynamic>;
-                    final status = regData["status"];
-
-                    // PENDING PAYMENT STATE
-                    if (status == "pending_payment") {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.orange.shade200),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      color: Colors.orange.shade800,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      "Payment Required",
-                                      style: TextStyle(
-                                        color: Colors.orange.shade900,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  "You have successfully booked your slot. Please complete the payment to finalize your registration.",
-                                  style: TextStyle(
-                                    color: Colors.orange.shade900,
-                                    fontSize: 14,
-                                    height: 1.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text(
-                                      "Total Amount",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    Text(
-                                      "RM ${(regData["total"] ?? 0).toStringAsFixed(2)}",
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 54,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.black,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(27),
-                                      ),
-                                    ),
-                                    onPressed: () => _handlePayment(
-                                      context,
-                                      (regData["total"] ?? 0).toDouble(),
-                                      widget.eventId,
-                                    ),
-                                    child: const Text(
-                                      "I Have Paid",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          _buildCheckInSection(context, data),
-                        ],
-                      );
-                    }
-
-                    // REGISTERED STATE
+                  if (isAdmin) {
+                    // ... Admin View Only Card ...
                     return Container(
-                      padding: const EdgeInsets.all(20),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.blue.shade200),
+                        border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.how_to_reg,
-                                color: Colors.blue.shade700,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                "Registered",
-                                style: TextStyle(
-                                  color: Colors.blue.shade700,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+                          const Icon(
+                            Icons.admin_panel_settings,
+                            size: 48,
+                            color: Colors.grey,
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Status: ${status?.toUpperCase() ?? "REGISTERED"}",
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Admin View Only",
                             style: TextStyle(
-                              color: Colors.blue.shade900,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "${regData["adults"] ?? 0} Adults, ${regData["kids"] ?? 0} Kids",
-                            style: TextStyle(
-                              color: Colors.blue.shade800,
-                              fontSize: 13,
-                            ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Admins cannot register for events. Please use the dashboard to manage this event.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 24),
-                          _buildCheckInSection(context, data),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AdminEventSummaryScreen(
+                                      eventId: widget.eventId,
+                                    ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.dashboard_customize),
+                              label: const Text("Manage Event"),
+                            ),
+                          ),
                         ],
                       ),
                     );
                   }
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /// FAMILY SELECTION
-                      Text(
-                        "Category",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade900,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedFamily,
-                        decoration: InputDecoration(
-                          hintText: "Select Family",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
-                        items: _families.map((f) {
-                          return DropdownMenuItem(value: f, child: Text(f));
-                        }).toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedFamily = val),
-                      ),
-                      const SizedBox(height: 24),
+                  return StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection("events")
+                        .doc(widget.eventId)
+                        .collection("registrations")
+                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                        .snapshots(),
+                    builder: (context, regSnap) {
+                      final isRegistered =
+                          regSnap.hasData && regSnap.data!.exists;
 
-                      Text(
-                        "Who's attending?",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade900,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      _counter("Adults", adults, () {
-                        if (adults > 1) setState(() => adults--);
-                      }, () => setState(() => adults++)),
-                      const SizedBox(height: 16),
-                      _counter("Kids", kids, () {
-                        if (kids > 0) setState(() => kids--);
-                      }, () => setState(() => kids++)),
-                      const SizedBox(height: 32),
-
-                      /// TOTAL (PAID EVENT ONLY)
-                      if (isPaidEvent) ...[
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      if (isRegistered) {
+                        final regData =
+                            regSnap.data!.data() as Map<String, dynamic>;
+                        final status = regData["status"];
+                        // ... Existing Registered Logic ...
+                        if (status == "pending_payment") {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                "Total Amount",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey,
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.orange.shade200,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: Colors.orange.shade800,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          "Payment Required",
+                                          style: TextStyle(
+                                            color: Colors.orange.shade900,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      "You have successfully booked your slot. Please complete the payment to finalize your registration.",
+                                      style: TextStyle(
+                                        color: Colors.orange.shade900,
+                                        fontSize: 14,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          "Total Amount",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          "RM ${(regData["total"] ?? 0).toStringAsFixed(2)}",
+                                          style: const TextStyle(
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 54,
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.black,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              27,
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () => _handlePayment(
+                                          context,
+                                          (regData["total"] ?? 0).toDouble(),
+                                          widget.eventId,
+                                        ),
+                                        child: const Text(
+                                          "I Have Paid",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              const SizedBox(height: 32),
+                              _buildCheckInSection(context, data),
+                            ],
+                          );
+                        }
+
+                        // REGISTERED STATE
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.how_to_reg,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    "Registered",
+                                    style: TextStyle(
+                                      color: Colors.blue.shade700,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
                               Text(
-                                "RM ${total.toStringAsFixed(2)}",
-                                style: const TextStyle(
-                                  fontSize: 24,
+                                "Status: ${status?.toUpperCase() ?? "REGISTERED"}",
+                                style: TextStyle(
+                                  color: Colors.blue.shade900,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "${regData["adults"] ?? 0} Adults, ${regData["kids"] ?? 0} Kids",
+                                style: TextStyle(
+                                  color: Colors.blue.shade800,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              _buildCheckInSection(context, data),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// FAMILY SELECTION
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Category",
+                                style: TextStyle(
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: Colors.grey.shade900,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
+                          const SizedBox(height: 12),
+                          const SizedBox(height: 12),
+                          Builder(
+                            builder: (context) {
+                              final List<String> families =
+                                  data["families"] != null
+                                  ? List<String>.from(data["families"])
+                                  : [];
 
-                      /// REGISTER BUTTON
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(27),
-                            ),
+                              if (families.isEmpty) {
+                                return const Text(
+                                  "No categories available",
+                                  style: TextStyle(color: Colors.grey),
+                                );
+                              }
+
+                              return DropdownButtonFormField<String>(
+                                value: _selectedFamily,
+                                decoration: InputDecoration(
+                                  hintText: "Select Family",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                items: families.map((f) {
+                                  return DropdownMenuItem(
+                                    value: f,
+                                    child: Text(f),
+                                  );
+                                }).toList(),
+                                onChanged: (val) =>
+                                    setState(() => _selectedFamily = val),
+                              );
+                            },
                           ),
-                          onPressed: () => _handleRegistration(
-                            context,
-                            adultFee,
-                            childFee,
-                            widget.eventId,
-                          ),
-                          child: const Text(
-                            "Confirm Registration",
+                          const SizedBox(height: 24),
+
+                          Text(
+                            "Who's attending?",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade900,
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                          const SizedBox(height: 20),
+                          _counter("Adults", adults, () {
+                            if (adults > 1) setState(() => adults--);
+                          }, () => setState(() => adults++)),
+                          const SizedBox(height: 16),
+                          _counter("Kids", kids, () {
+                            if (kids > 0) setState(() => kids--);
+                          }, () => setState(() => kids++)),
+                          const SizedBox(height: 32),
 
-                      /// PAYMENT BUTTON
-                      if (isPaidEvent)
-                        SizedBox(
-                          width: double.infinity,
-                          height: 54,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.black,
-                              side: BorderSide(color: Colors.grey.shade300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(27),
+                          /// TOTAL (PAID EVENT ONLY)
+                          if (isPaidEvent) ...[
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Total Amount",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    "RM ${total.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            onPressed: () =>
-                                _handlePayment(context, total, widget.eventId),
-                            child: const Text(
-                              "I Have Paid",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            const SizedBox(height: 32),
+                          ],
+
+                          /// REGISTER BUTTON
+                          SizedBox(
+                            width: double.infinity,
+                            height: 54,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(27),
+                                ),
+                              ),
+                              onPressed: () => _handleRegistration(
+                                context,
+                                adultFee,
+                                childFee,
+                                widget.eventId,
+                              ),
+                              child: const Text(
+                                "Confirm Registration",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
+                          const SizedBox(height: 16),
+
+                          /// PAYMENT BUTTON
+                          if (isPaidEvent)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.black,
+                                  side: BorderSide(color: Colors.grey.shade300),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(27),
+                                  ),
+                                ),
+                                onPressed: () => _handlePayment(
+                                  context,
+                                  total,
+                                  widget.eventId,
+                                ),
+                                child: const Text(
+                                  "I Have Paid",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
@@ -504,36 +624,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
               const SizedBox(height: 24),
 
-              /// ADMIN ONLY
-              FutureBuilder<bool>(
-                future: UserRoleService.isAdmin(),
-                builder: (context, snap) {
-                  if (snap.data != true) return const SizedBox();
-                  return Column(
-                    children: [
-                      const Divider(),
-                      const SizedBox(height: 16),
-                      TextButton.icon(
-                        icon: const Icon(Icons.dashboard_outlined),
-                        label: const Text("Manage Event (Admin)"),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AdminEventSummaryScreen(
-                                eventId: widget.eventId,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                },
-              ),
+              const SizedBox(height: 40),
               const SizedBox(height: 40),
             ],
           );

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'admin_create_event_screen.dart';
 import 'event_detail_screen.dart';
-import 'admin_payment_screen.dart';
 import 'profile_screen.dart';
 import '../services/user_role_service.dart';
 import 'admin_edit_event_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -49,35 +48,18 @@ class HomeScreen extends StatelessWidget {
                 future: UserRoleService.isAdmin(),
                 builder: (context, snapshot) {
                   if (snapshot.data != true) return const SizedBox();
-                  return Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle_outline,
-                          color: Colors.black,
-                        ),
-                        tooltip: 'Create Event',
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AdminCreateEventScreen(),
-                          ),
-                        ),
+                  return IconButton(
+                    icon: const Icon(
+                      Icons.dashboard_outlined,
+                      color: Colors.black,
+                    ),
+                    tooltip: 'Admin Dashboard',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminDashboardScreen(),
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.payments_outlined,
-                          color: Colors.black,
-                        ),
-                        tooltip: 'Payments',
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const AdminPaymentScreen(),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   );
                 },
               ),
@@ -233,11 +215,12 @@ class HomeScreen extends StatelessWidget {
                             return false;
                           },
                           onDismissed: (_) async {
+                            final messenger = ScaffoldMessenger.of(context);
                             await FirebaseFirestore.instance
                                 .collection("events")
                                 .doc(doc.id)
                                 .delete();
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            messenger.showSnackBar(
                               const SnackBar(content: Text("Event deleted")),
                             );
                           },

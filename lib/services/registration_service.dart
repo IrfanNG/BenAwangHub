@@ -24,6 +24,16 @@ class RegistrationService {
     required double childFee,
     required String? familyName,
   }) async {
+    // Check if user is admin
+    final checks = await Future.wait([
+      FirebaseFirestore.instance.collection("users").doc(userId).get(),
+    ]);
+
+    final userDoc = checks[0];
+    if (userDoc.exists && userDoc["role"] == "admin") {
+      throw "Admins cannot register for events. Use the admin dashboard to manage events.";
+    }
+
     /// 1️⃣ Get event data
     final eventDoc = await FirebaseFirestore.instance
         .collection("events")
