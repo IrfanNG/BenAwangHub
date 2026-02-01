@@ -362,7 +362,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _selectedFamily,
+                        initialValue: _selectedFamily,
                         decoration: InputDecoration(
                           hintText: "Select Family",
                           border: OutlineInputBorder(
