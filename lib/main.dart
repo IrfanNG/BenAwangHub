@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'app_theme.dart';
 
+import 'services/auth_wrapper.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
 
       // 👇 App routing
-      initialRoute: "/login",
+      home: const AuthWrapper(),
       routes: {
         "/login": (_) => const LoginScreen(),
         "/home": (_) => const HomeScreen(),

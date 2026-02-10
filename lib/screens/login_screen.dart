@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'home_screen.dart';
+import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -48,6 +48,39 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => isLoading = true);
+    try {
+      final authService = AuthService();
+      await authService.signInWithGoogle();
+
+      if (mounted) {
+        // AuthWrapper will handle navigation, but if we pushed LoginScreen manually,
+        // we might want to pop or replace. Best to let AuthWrapper handle it
+        // or push replacement if logic dictates.
+        // Assuming AuthWrapper is at root, we just need to ensure state updates or nav happens.
+        // If we are using AuthWrapper at root, updates happen automatically via stream.
+        // However, if we came here via Navigator.push, we need to pop.
+        // For safety, let's pushAndRemoveUntil to Home.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (_) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Google Sign-In Failed: $e"),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
   Future<void> submit() async {
     if (emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
@@ -63,37 +96,18 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => isLoading = true);
 
     try {
+      final authService = AuthService();
       if (isLogin) {
-        final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text.trim(),
-          password: passwordController.text,
+        await authService.signInWithEmailPassword(
+          emailController.text.trim(),
+          passwordController.text,
         );
-
-        final uid = cred.user!.uid;
-        final userDoc = await FirebaseFirestore.instance
-            .collection("users")
-            .doc(uid)
-            .get();
-
-        if (!userDoc.exists) {
-          await FirebaseAuth.instance.signOut();
-          throw Exception("This email is not registered in the system");
-        }
       } else {
-        var cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
+        await authService.signUpWithEmailPassword(
+          emailController.text.trim(),
+          passwordController.text.trim(),
+          emailController.text.split("@")[0],
         );
-
-        await FirebaseFirestore.instance
-            .collection("users")
-            .doc(cred.user!.uid)
-            .set({
-              "email": emailController.text.trim(),
-              "name": emailController.text.split("@")[0],
-              "role": "user",
-              "createdAt": FieldValue.serverTimestamp(),
-            });
       }
 
       if (mounted) {
@@ -108,9 +122,7 @@ class _LoginScreenState extends State<LoginScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: Theme.of(context)
-                .colorScheme
-                .primary, // Using primary for info/errors sometimes cleaner or error color
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -147,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen>
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -235,6 +247,24 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                     )
                                   : Text(isLogin ? "Login" : "Register"),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Google Sign-In Button
+                            OutlinedButton.icon(
+                              onPressed: isLoading ? null : _handleGoogleSignIn,
+                              icon: const Icon(
+                                Icons.login,
+                              ), // Replace with specific Google icon if asset available
+                              label: const Text("Sign in with Google"),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                side: BorderSide(
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 24),
                             Row(

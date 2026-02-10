@@ -65,7 +65,7 @@ class _AdminFamilyMembersScreenState extends State<AdminFamilyMembersScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: widget.registrations.length,
-              separatorBuilder: (_, __) => const Divider(),
+              separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
                 final regDoc = widget.registrations[index];
                 return _FamilyMemberTile(
