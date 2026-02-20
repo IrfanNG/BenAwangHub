@@ -5,6 +5,7 @@ import 'admin_create_event_screen.dart';
 import 'admin_payment_screen.dart';
 import 'admin_user_management_screen.dart';
 import 'admin_edit_event_screen.dart';
+import 'admin_manage_notifications_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -211,6 +212,18 @@ class AdminDashboardScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => const AdminUserManagementScreen(),
+                  ),
+                ),
+              ),
+              _actionCard(
+                context,
+                "Notifications",
+                Icons.notifications_outlined,
+                Colors.teal,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminManageNotificationsScreen(),
                   ),
                 ),
               ),
