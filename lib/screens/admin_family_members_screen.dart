@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/translation_manager.dart';
 
 class AdminFamilyMembersScreen extends StatefulWidget {
   final String familyName;
@@ -32,7 +33,7 @@ class _AdminFamilyMembersScreenState extends State<AdminFamilyMembersScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          "${widget.familyName} Members",
+          "${widget.familyName} ${context.l10n('members')}",
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         elevation: 0,
@@ -46,7 +47,7 @@ class _AdminFamilyMembersScreenState extends State<AdminFamilyMembersScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: "Search members...",
+                hintText: context.l10n('search_members'),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -102,7 +103,7 @@ class _FamilyMemberTile extends StatelessWidget {
         if (!userSnap.hasData) return const SizedBox();
 
         final userData = userSnap.data!.data() as Map<String, dynamic>?;
-        final name = userData?["name"] ?? "Unknown";
+        final name = userData?["name"] ?? context.l10n('unknown');
 
         // Filter here if search query is active
         if (searchQuery.isNotEmpty &&
@@ -148,7 +149,7 @@ class _FamilyMemberTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "$adults Adults, $kids Kids",
+                      "$adults ${context.l10n('adults')}, $kids ${context.l10n('kids')}",
                       style: TextStyle(
                         color: Colors.grey.shade800,
                         fontWeight: FontWeight.w500,
@@ -158,8 +159,8 @@ class _FamilyMemberTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       isPresent
-                          ? "Checked in at ${_formatTime(checkedInAt)}"
-                          : "Not checked in",
+                          ? "${context.l10n('checked_in_at')} ${_formatTime(checkedInAt)}"
+                          : context.l10n('not_checked_in'),
                       style: TextStyle(
                         color: isPresent ? Colors.green : Colors.red.shade400,
                         fontSize: 12,

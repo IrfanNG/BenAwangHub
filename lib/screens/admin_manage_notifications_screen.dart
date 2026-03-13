@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/translation_manager.dart';
 import '../services/notification_service.dart';
 import 'package:intl/intl.dart';
 
@@ -45,7 +46,7 @@ class _AdminManageNotificationsScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isEditing ? "Edit Notification" : "Add Notification",
+                isEditing ? context.l10n('edit_notification') : context.l10n('add_notification'),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -55,9 +56,9 @@ class _AdminManageNotificationsScreenState
               const SizedBox(height: 16),
               TextField(
                 controller: titleController,
-                decoration: const InputDecoration(
-                  labelText: "Title (e.g., Gathering Theme)",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.l10n('notif_title_hint'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -65,7 +66,7 @@ class _AdminManageNotificationsScreenState
                 controller: dateController,
                 readOnly: true,
                 decoration: InputDecoration(
-                  labelText: "Date",
+                  labelText: context.l10n('date'),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_today),
@@ -89,9 +90,9 @@ class _AdminManageNotificationsScreenState
               TextField(
                 controller: descriptionController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: "Description (Short note - Optional)",
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.l10n('notif_desc_hint'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 24),
@@ -107,8 +108,8 @@ class _AdminManageNotificationsScreenState
                     if (titleController.text.isEmpty ||
                         dateController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Please fill in title and date fields"),
+                        SnackBar(
+                          content: Text(context.l10n('fill_title_date')),
                         ),
                       );
                       return;
@@ -132,7 +133,7 @@ class _AdminManageNotificationsScreenState
                     Navigator.pop(context);
                   },
                   child: Text(
-                    isEditing ? "Update" : "Save",
+                    isEditing ? context.l10n('update') : context.l10n('save'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -153,12 +154,12 @@ class _AdminManageNotificationsScreenState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Delete Notification"),
-          content: const Text("Are you sure you want to delete this?"),
+          title: Text(context.l10n('delete_notification')),
+          content: Text(context.l10n('delete_confirm_msg')),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text(context.l10n('cancel')),
             ),
             TextButton(
               onPressed: () async {
@@ -166,7 +167,7 @@ class _AdminManageNotificationsScreenState
                 if (!context.mounted) return;
                 Navigator.pop(context);
               },
-              child: const Text("Delete", style: TextStyle(color: Colors.red)),
+              child: Text(context.l10n('delete'), style: const TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -179,9 +180,9 @@ class _AdminManageNotificationsScreenState
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Manage Notifications",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          context.l10n('manage_notifications'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -195,7 +196,7 @@ class _AdminManageNotificationsScreenState
         stream: NotificationService.getNotificationsStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text("Error loading notifications."));
+            return Center(child: Text(context.l10n('err_load_notif')));
           }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -215,7 +216,7 @@ class _AdminManageNotificationsScreenState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "No notifications yet",
+                    context.l10n('no_notifications_yet'),
                     style: TextStyle(
                       color: Colors.grey.shade400,
                       fontWeight: FontWeight.w500,
@@ -259,7 +260,7 @@ class _AdminManageNotificationsScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            data['title'] ?? "Untitled",
+                            data['title'] ?? context.l10n('untitled'),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -268,7 +269,7 @@ class _AdminManageNotificationsScreenState
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            data['date'] ?? "No date",
+                            data['date'] ?? context.l10n('no_date'),
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey.shade600,

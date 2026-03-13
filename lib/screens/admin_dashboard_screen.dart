@@ -6,6 +6,7 @@ import 'admin_payment_screen.dart';
 import 'admin_user_management_screen.dart';
 import 'admin_edit_event_screen.dart';
 import 'admin_manage_notifications_screen.dart';
+import '../services/translation_manager.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -15,9 +16,9 @@ class AdminDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Admin Dashboard",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          context.l10n('admin_dashboard'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -32,7 +33,7 @@ class AdminDashboardScreen extends StatelessWidget {
           children: [
             _buildHeader(context),
             const SizedBox(height: 24),
-            _buildStats(),
+            _buildStats(context),
             const SizedBox(height: 32),
             _buildQuickActions(context),
             const SizedBox(height: 32),
@@ -67,9 +68,9 @@ class AdminDashboardScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Welcome back,",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  Text(
+                    context.l10n('welcome_back_comma'),
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                   Text(
                     user?.email ?? "Admin",
@@ -88,14 +89,15 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStats() {
+  Widget _buildStats(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
           Expanded(
             child: _statCard(
-              "Total Events",
+              context,
+              context.l10n('total_events'),
               FirebaseFirestore.instance.collection("events").count(),
               Colors.blue.shade50,
               Colors.blue.shade700,
@@ -104,7 +106,8 @@ class AdminDashboardScreen extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: _statCard(
-              "Users",
+              context,
+              context.l10n('users'),
               FirebaseFirestore.instance.collection("users").count(),
               Colors.purple.shade50,
               Colors.purple.shade700,
@@ -116,6 +119,7 @@ class AdminDashboardScreen extends StatelessWidget {
   }
 
   Widget _statCard(
+    BuildContext context,
     String title,
     AggregateQuery query,
     Color bgColor,
@@ -164,9 +168,9 @@ class AdminDashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Quick Actions",
-            style: TextStyle(
+          Text(
+            context.l10n('quick_actions'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -183,7 +187,7 @@ class AdminDashboardScreen extends StatelessWidget {
             children: [
               _actionCard(
                 context,
-                "Create Event",
+                context.l10n('create_event'),
                 Icons.add_circle_outline,
                 Colors.black,
                 () => Navigator.push(
@@ -195,7 +199,7 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
               _actionCard(
                 context,
-                "Payments",
+                context.l10n('payments'),
                 Icons.payments_outlined,
                 Colors.green,
                 () => Navigator.push(
@@ -205,7 +209,7 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
               _actionCard(
                 context,
-                "Manage Users",
+                context.l10n('manage_users'),
                 Icons.people_outline,
                 Colors.orange,
                 () => Navigator.push(
@@ -217,7 +221,7 @@ class AdminDashboardScreen extends StatelessWidget {
               ),
               _actionCard(
                 context,
-                "Notifications",
+                context.l10n('notifications'),
                 Icons.notifications_outlined,
                 Colors.teal,
                 () => Navigator.push(
@@ -289,11 +293,11 @@ class AdminDashboardScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            "Recent Events",
-            style: TextStyle(
+            context.l10n('recent_events'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black,
@@ -315,7 +319,7 @@ class AdminDashboardScreen extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  "No events yet",
+                  context.l10n('no_events_yet'),
                   style: TextStyle(color: Colors.grey.shade500),
                 ),
               );
@@ -365,14 +369,14 @@ class AdminDashboardScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                data["title"] ?? "Untitled",
+                                data["title"] ?? context.l10n('untitled'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
                               Text(
-                                data["date"] ?? "No date",
+                                data["date"] ?? context.l10n('no_date'),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,

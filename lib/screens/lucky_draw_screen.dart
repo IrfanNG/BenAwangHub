@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import '../services/translation_manager.dart';
 import '../services/lucky_draw_service.dart';
 
 class LuckyDrawScreen extends StatefulWidget {
@@ -48,7 +49,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Error: $e")));
+        ).showSnackBar(SnackBar(content: Text("${context.l10n('err_saving_winner')}: $e")));
       }
     }
   }
@@ -57,7 +58,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
     if (eligibleTickets.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("No eligible tickets!")));
+      ).showSnackBar(SnackBar(content: Text(context.l10n('no_eligible_tickets_err'))));
       return;
     }
 
@@ -118,8 +119,8 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: Colors.amber.shade50,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          "🎉 WE HAVE A WINNER! 🎉",
+        title: Text(
+          context.l10n('we_have_a_winner'),
           textAlign: TextAlign.center,
         ),
         content: Column(
@@ -150,9 +151,9 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                 ),
               ),
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Awesome!",
-                style: TextStyle(fontWeight: FontWeight.bold),
+              child: Text(
+                context.l10n('awesome'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -166,7 +167,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF1E293B), // Dark background for contrast
       appBar: AppBar(
-        title: const Text("Lucky Draw"),
+        title: Text(context.l10n('lucky_draw')),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
@@ -179,7 +180,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
             children: [
               // Title
               Text(
-                "LUCKY NUMBER",
+                context.l10n('lucky_number_title'),
                 style: TextStyle(
                   color: Colors.amber.shade400,
                   fontSize: 24,
@@ -239,7 +240,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                         ? null
                         : (isSpinning ? _stopSpin : _startSpin),
                     child: Text(
-                      isSpinning ? "STOP" : "SPIN!",
+                      isSpinning ? context.l10n('stop') : context.l10n('spin'),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -251,18 +252,18 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
               const SizedBox(height: 20),
 
               if (eligibleTickets.isEmpty && !isLoading)
-                const Text(
-                  "No more eligible tickets!",
-                  style: TextStyle(color: Colors.white54),
+                Text(
+                  context.l10n('no_more_tickets'),
+                  style: const TextStyle(color: Colors.white54),
                 ),
 
               const Spacer(),
 
               // Recent Winners
               if (sessionWinners.isNotEmpty) ...[
-                const Text(
-                  "Session Winners",
-                  style: TextStyle(color: Colors.white70),
+                Text(
+                  context.l10n('session_winners'),
+                  style: const TextStyle(color: Colors.white70),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(

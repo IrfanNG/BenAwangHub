@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/translation_manager.dart';
 import 'admin_attendance_screen.dart';
 import 'lucky_draw_screen.dart';
 
@@ -30,9 +31,9 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          "Share this code to check in",
-          style: TextStyle(
+        Text(
+          context.l10n('share_code_msg'),
+          style: const TextStyle(
             color: Color(0xFF6B7280),
             fontWeight: FontWeight.w500,
           ),
@@ -99,15 +100,15 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
               return CustomScrollView(
                 slivers: [
                   /// APP BAR
-                  const SliverAppBar(
+                  SliverAppBar(
                     pinned: true,
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                     elevation: 0,
                     centerTitle: true,
                     title: Text(
-                      "Event Summary",
-                      style: TextStyle(
+                      context.l10n('event_summary'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17,
                       ),
@@ -152,9 +153,9 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                                         color: Colors.grey,
                                       ),
                                       const SizedBox(height: 16),
-                                      const Text(
-                                        "Ready to start?",
-                                        style: TextStyle(
+                                      Text(
+                                        context.l10n('ready_to_start'),
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 16,
                                         ),
@@ -185,7 +186,7 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                                                   "winnerCount": winnerCount,
                                                 });
                                           },
-                                          child: const Text("Start Check-In"),
+                                          child: Text(context.l10n('start_check_in')),
                                         ),
                                       ),
                                     ],
@@ -204,9 +205,9 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                           const SizedBox(height: 32),
 
                           /// STATS GRID
-                          const Text(
-                            "Overview",
-                            style: TextStyle(
+                          Text(
+                            context.l10n('overview'),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -217,7 +218,7 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                             children: [
                               Expanded(
                                 child: _StatCard(
-                                  label: "Adults",
+                                  label: context.l10n('adults'),
                                   value: totalAdults.toString(),
                                   icon: Icons.person,
                                 ),
@@ -225,7 +226,7 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _StatCard(
-                                  label: "Kids",
+                                  label: context.l10n('kids'),
                                   value: totalKids.toString(),
                                   icon: Icons.child_care,
                                 ),
@@ -237,7 +238,7 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                             children: [
                               Expanded(
                                 child: _StatCard(
-                                  label: "Total Guests",
+                                  label: context.l10n('total_guests'),
                                   value: (totalAdults + totalKids).toString(),
                                   icon: Icons.groups,
                                   highlight: true,
@@ -246,7 +247,7 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: _StatCard(
-                                  label: "Paid",
+                                  label: context.l10n('paid'),
                                   value:
                                       "$paidCount/${regSnap.data!.docs.length}",
                                   icon: Icons.payments,
@@ -258,9 +259,9 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                           const SizedBox(height: 32),
 
                           /// ACTIONS LIST
-                          const Text(
-                            "Actions",
-                            style: TextStyle(
+                          Text(
+                            context.l10n('actions'),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -269,8 +270,8 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
 
                           _ActionTile(
                             icon: Icons.list_alt,
-                            title: "View Attendance List",
-                            subtitle: "Check who is here",
+                            title: context.l10n('view_attendance_list'),
+                            subtitle: context.l10n('check_who_is_here'),
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -285,8 +286,8 @@ class _AdminEventSummaryScreenState extends State<AdminEventSummaryScreen> {
                           const SizedBox(height: 12),
                           _ActionTile(
                             icon: Icons.casino,
-                            title: "Lucky Draw Room",
-                            subtitle: "Run the lucky draw",
+                            title: context.l10n('lucky_draw_room'),
+                            subtitle: context.l10n('run_lucky_draw'),
                             onTap: () {
                               Navigator.push(
                                 context,

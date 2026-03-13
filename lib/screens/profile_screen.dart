@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'about_app_screen.dart';
 import '../services/user_role_service.dart';
 import 'admin_dashboard_screen.dart';
+import '../services/translation_manager.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -51,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Error loading profile: $e")));
+        ).showSnackBar(SnackBar(content: Text("${context.l10n('error_profile_load')}: $e")));
       }
     } finally {
       if (mounted) setState(() => loading = false);
@@ -73,14 +75,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => loading = false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated successfully")),
+        SnackBar(content: Text(context.l10n('profile_updated'))),
       );
     }
   }
 
   Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
-    if (mounted) Navigator.pushReplacementNamed(context, "/login");
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n('logout_confirm')),
+        content: Text(context.l10n('logout_confirm_desc')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n('logout'), style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) Navigator.pushReplacementNamed(context, "/login");
+    }
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text(
+              context.l10n('language_settings'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          ListTile(
+            leading: const Text("🇲🇾", style: TextStyle(fontSize: 24)),
+            title: Text(context.l10n('malay')),
+            trailing: context.read<TranslationManager>().isMalay ? const Icon(Icons.check, color: Colors.teal) : null,
+            onTap: () {
+              context.read<TranslationManager>().setLanguage('ms');
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Text("🇺🇸", style: TextStyle(fontSize: 24)),
+            title: Text(context.l10n('english')),
+            trailing: !context.read<TranslationManager>().isMalay ? const Icon(Icons.check, color: Colors.teal) : null,
+            onTap: () {
+              context.read<TranslationManager>().setLanguage('en');
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
   }
 
   @override
@@ -95,9 +168,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Profile",
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+        title: Text(
+          context.l10n('profile'),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -159,7 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    nameController.text.isEmpty ? "User" : nameController.text,
+                    nameController.text.isEmpty ? context.l10n('profile') : nameController.text,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -189,7 +262,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 40),
 
             /// SETTINGS LIST
-            _sectionHeader("Account Settings"),
+            _sectionHeader(context.l10n('account_settings')),
 
             FutureBuilder<bool>(
               future: UserRoleService.isAdmin(),
@@ -212,8 +285,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             _profileItem(
               icon: Icons.person_outline,
-              title: "Personal Details",
+              title: context.l10n('personal_details'),
               onTap: () => _showEditProfileDialog(context),
+            ),
+            _profileItem(
+              icon: Icons.language,
+              title: context.l10n('language'),
+              trailing: Text(
+                context.read<TranslationManager>().isMalay ? "Bahasa Melayu" : "English",
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
+              onTap: () => _showLanguageDialog(context),
             ),
             _profileItem(
               icon: Icons.notifications_none,
@@ -228,15 +310,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 24),
 
-            _sectionHeader("Support"),
+            _sectionHeader(context.l10n('help_support')),
             _profileItem(
               icon: Icons.help_outline,
-              title: "Help & Support",
+              title: context.l10n('help_support'),
               onTap: () {},
             ),
             _profileItem(
               icon: Icons.info_outline,
-              title: "About App",
+              title: context.l10n('about_app'),
               trailing: const Text(
                 "v1.0.0",
                 style: TextStyle(color: Colors.grey, fontSize: 13),
@@ -255,9 +337,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextButton(
               onPressed: logout,
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text(
-                "Log Out",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              child: Text(
+                context.l10n('logout'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
 
@@ -338,18 +420,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              "Edit Profile",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n('edit_profile'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
 
             // Name
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Full Name",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n('full_name'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -358,9 +440,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: "Phone Number",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n('phone_number'),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -369,9 +451,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: icController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: "IC / ID Number",
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n('ic_number_label'),
+                border: const OutlineInputBorder(),
               ),
             ),
 
@@ -392,7 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   saveProfile();
                   Navigator.pop(context);
                 },
-                child: const Text("Save Changes"),
+                child: Text(context.l10n('save_changes')),
               ),
             ),
             const SizedBox(height: 40),

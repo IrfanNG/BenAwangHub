@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/translation_manager.dart';
 import '../services/payment_service.dart';
 
 class AdminPaymentScreen extends StatelessWidget {
@@ -21,9 +22,9 @@ class AdminPaymentScreen extends StatelessWidget {
             backgroundColor: Colors.white,
             foregroundColor: primary,
             elevation: 0,
-            title: const Text(
-              "Payment Approval",
-              style: TextStyle(fontWeight: FontWeight.w600),
+            title: Text(
+              context.l10n('payment_approval'),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
 
@@ -32,7 +33,7 @@ class AdminPaymentScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
               child: Text(
-                "Pending Payments",
+                context.l10n('pending_payments'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -59,7 +60,7 @@ class AdminPaymentScreen extends StatelessWidget {
                 return SliverFillRemaining(
                   child: Center(
                     child: Text(
-                      "No pending payments",
+                      context.l10n('no_pending_payments'),
                       style: TextStyle(color: secondary),
                     ),
                   ),
@@ -137,14 +138,14 @@ class _PaymentCardState extends State<_PaymentCard> {
                 .get(),
             builder: (context, snap) {
               if (!snap.hasData || snap.data!.data() == null) {
-                return const Text("Unknown User");
+                return Text(context.l10n('unknown_user'));
               }
               final user = snap.data!.data() as Map<String, dynamic>;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user["name"] ?? "Unknown",
+                    user["name"] ?? context.l10n('unknown'),
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
@@ -167,7 +168,7 @@ class _PaymentCardState extends State<_PaymentCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Amount", style: TextStyle(color: secondary)),
+              Text(context.l10n('amount'), style: const TextStyle(color: secondary)),
               Text(
                 "RM ${amount.toStringAsFixed(2)}",
                 style: const TextStyle(
@@ -182,7 +183,7 @@ class _PaymentCardState extends State<_PaymentCard> {
           if (widget.timestamp != null) ...[
             const SizedBox(height: 8),
             Text(
-              _formatTimestamp(widget.timestamp!),
+              _formatTimestamp(context, widget.timestamp!),
               style: const TextStyle(fontSize: 12, color: secondary),
             ),
           ],
@@ -217,9 +218,9 @@ class _PaymentCardState extends State<_PaymentCard> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      "Approve Payment",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                  : Text(
+                      context.l10n('approve_payment'),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
             ),
           ),
@@ -228,13 +229,19 @@ class _PaymentCardState extends State<_PaymentCard> {
     );
   }
 
-  String _formatTimestamp(Timestamp timestamp) {
+  String _formatTimestamp(BuildContext context, Timestamp timestamp) {
     final date = timestamp.toDate();
     final diff = DateTime.now().difference(date);
 
-    if (diff.inMinutes < 60) return "${diff.inMinutes}m ago";
-    if (diff.inHours < 24) return "${diff.inHours}h ago";
-    if (diff.inDays < 7) return "${diff.inDays}d ago";
+    if (diff.inMinutes < 60) {
+      return "${diff.inMinutes}${context.l10n('m_ago')}";
+    }
+    if (diff.inHours < 24) {
+      return "${diff.inHours}${context.l10n('h_ago')}";
+    }
+    if (diff.inDays < 7) {
+      return "${diff.inDays}${context.l10n('d_ago')}";
+    }
     return "${date.day}/${date.month}/${date.year}";
   }
 }

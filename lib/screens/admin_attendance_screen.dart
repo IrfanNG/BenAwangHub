@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/translation_manager.dart';
 import 'admin_family_members_screen.dart';
 
 class AdminAttendanceScreen extends StatelessWidget {
@@ -10,7 +11,7 @@ class AdminAttendanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Attendance")),
+      appBar: AppBar(title: Text(context.l10n('attendance'))),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection("events")
@@ -42,10 +43,10 @@ class AdminAttendanceScreen extends StatelessWidget {
           }
 
           if (registrations.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                "No registrations yet",
-                style: TextStyle(color: Colors.grey),
+                context.l10n('no_registrations_yet'),
+                style: const TextStyle(color: Colors.grey),
               ),
             );
           }
@@ -71,7 +72,7 @@ class AdminAttendanceScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Total Checked In (Pax)",
+                                context.l10n('total_checked_in_pax'),
                               style: TextStyle(
                                 color: Colors.grey.shade500,
                                 fontSize: 13,
@@ -136,8 +137,8 @@ class AdminAttendanceScreen extends StatelessWidget {
                         : [];
 
                     if (familyList.isEmpty) {
-                      return const Center(
-                        child: Text("No categories found in this event"),
+                      return Center(
+                        child: Text(context.l10n('no_categories_found')),
                       );
                     }
 
@@ -240,7 +241,7 @@ class AdminAttendanceScreen extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "$famAttendedPax/$famTotalPax Checked in",
+                                          "$famAttendedPax/$famTotalPax ${context.l10n('checked_in')}",
                                           style: const TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w700,
@@ -249,7 +250,7 @@ class AdminAttendanceScreen extends StatelessWidget {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          "$famNotCheckedIn Not checked in",
+                                          "$famNotCheckedIn ${context.l10n('not_checked_in')}",
                                           style: TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/translation_manager.dart';
 
 import '../services/event_service.dart';
 
@@ -40,7 +41,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
         deadlineController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Please fill in required fields"),
+          content: Text(context.l10n('fill_required')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -69,7 +70,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Event created successfully")),
+          SnackBar(content: Text(context.l10n('event_created_success'))),
         );
       }
     } catch (e) {
@@ -90,7 +91,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
     // Leveraging the global AppTheme by default
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Event"), centerTitle: true),
+      appBar: AppBar(title: Text(context.l10n('create_event')), centerTitle: true),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -99,14 +100,14 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionTitle(context, "Event Details"),
+                  _sectionTitle(context, context.l10n('event_details')),
                   const SizedBox(height: 16),
 
                   TextField(
                     controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: "Event Title *",
-                      hintText: "e.g. Family Day 2026",
+                    decoration: InputDecoration(
+                      labelText: context.l10n('event_title_label'),
+                      hintText: context.l10n('event_title_hint'),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -130,8 +131,8 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                         });
                       }
                     },
-                    decoration: const InputDecoration(
-                      labelText: "Event Date *",
+                    decoration: InputDecoration(
+                      labelText: context.l10n('event_date_label'),
                       hintText: "YYYY-MM-DD",
                     ),
                   ),
@@ -139,8 +140,8 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
 
                   TextField(
                     controller: locationController,
-                    decoration: const InputDecoration(
-                      labelText: "Location *",
+                    decoration: InputDecoration(
+                      labelText: "${context.l10n('location')} *",
                       hintText: "e.g. Port Dickson",
                     ),
                   ),
@@ -164,8 +165,8 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                         });
                       }
                     },
-                    decoration: const InputDecoration(
-                      labelText: "Registration Deadline *",
+                    decoration: InputDecoration(
+                      labelText: context.l10n('reg_deadline_label'),
                       hintText: "YYYY-MM-DD",
                     ),
                   ),
@@ -176,9 +177,9 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                     onChanged: (val) {
                       setState(() => hasLuckyDraw = val ?? false);
                     },
-                    title: const Text("Enable Cabutan Bertuah"),
-                    subtitle: const Text(
-                      "Participants will receive a random lucky number",
+                    title: Text(context.l10n('enable_lucky_draw')),
+                    subtitle: Text(
+                      context.l10n('lucky_draw_desc'),
                     ),
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.leading,
@@ -190,7 +191,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                   OutlinedButton.icon(
                     onPressed: () => _showManageCategoriesDialog(context),
                     icon: const Icon(Icons.category),
-                    label: const Text("Manage Categories"),
+                    label: Text(context.l10n('manage_categories')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black,
                       side: const BorderSide(color: Colors.grey),
@@ -198,7 +199,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                   ),
 
                   const SizedBox(height: 32),
-                  _sectionTitle(context, "Pricing (Optional)"),
+                  _sectionTitle(context, context.l10n('pricing_optional')),
                   const SizedBox(height: 16),
 
                   Row(
@@ -209,8 +210,8 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          decoration: const InputDecoration(
-                            labelText: "Adult Fee (RM)",
+                          decoration: InputDecoration(
+                            labelText: context.l10n('adult_fee_label'),
                             hintText: "0.00",
                           ),
                         ),
@@ -222,8 +223,8 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          decoration: const InputDecoration(
-                            labelText: "Child Fee (RM)",
+                          decoration: InputDecoration(
+                            labelText: context.l10n('child_fee_label'),
                             hintText: "0.00",
                           ),
                         ),
@@ -246,7 +247,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text("Create Event"),
+                          : Text(context.l10n('create_event')),
                     ),
                   ),
 
@@ -277,7 +278,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text("Manage Categories"),
+            title: Text(context.l10n('manage_categories')),
             content: SizedBox(
               width: double.maxFinite,
               height: 400,
@@ -288,10 +289,10 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                       Expanded(
                         child: TextField(
                           controller: newCatController,
-                          decoration: const InputDecoration(
-                            hintText: "New Category Name",
+                          decoration: InputDecoration(
+                            hintText: context.l10n('new_category_name'),
                             isDense: true,
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -317,7 +318,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
                   const Divider(),
                   Expanded(
                     child: _tempFamilies.isEmpty
-                        ? const Center(child: Text("No categories added yet"))
+                        ? Center(child: Text(context.l10n('no_categories_added')))
                         : ListView.separated(
                             shrinkWrap: true,
                             itemCount: _tempFamilies.length,
@@ -349,7 +350,7 @@ class _AdminCreateEventScreenState extends State<AdminCreateEventScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Done"),
+                child: Text(context.l10n('done')),
               ),
             ],
           );

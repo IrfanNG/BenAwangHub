@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/translation_manager.dart';
 
 import '../services/registration_service.dart';
 import '../services/payment_service.dart';
@@ -59,9 +60,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Event Details",
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+        title: Text(
+          context.l10n('event_details'),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -86,7 +87,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           }
 
           if (!snapshot.data!.exists) {
-            return const Center(child: Text("Event not found"));
+            return Center(child: Text(context.l10n('event_not_found')));
           }
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -102,7 +103,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               // ... existing header components ...
               /// HEADER INFO
               Text(
-                data["title"] ?? "Untitled",
+                data["title"] ?? context.l10n('untitled'),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
@@ -130,9 +131,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Date & Time",
-                          style: TextStyle(
+                        Text(
+                          context.l10n('date_time'),
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
                             fontWeight: FontWeight.w600,
@@ -140,7 +141,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          data["date"] ?? "TBA",
+                          data["date"] ?? context.l10n('tba'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -171,9 +172,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Location",
-                          style: TextStyle(
+                        Text(
+                          context.l10n('location'),
+                          style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
                             fontWeight: FontWeight.w600,
@@ -181,7 +182,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          data["location"] ?? "TBA",
+                          data["location"] ?? context.l10n('tba'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -222,18 +223,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             color: Colors.grey,
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            "Admin View Only",
-                            style: TextStyle(
+                          Text(
+                            context.l10n('admin_view_only'),
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            "Admins cannot register for events. Please use the dashboard to manage this event.",
+                          Text(
+                            context.l10n('admin_reg_disclaimer'),
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.grey),
+                            style: const TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
@@ -258,7 +259,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 );
                               },
                               icon: const Icon(Icons.dashboard_customize),
-                              label: const Text("Manage Event"),
+                              label: Text(context.l10n('manage_event')),
                             ),
                           ),
                         ],
@@ -307,7 +308,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                         ),
                                         const SizedBox(width: 12),
                                         Text(
-                                          "Payment Required",
+                                          context.l10n('payment_required'),
                                           style: TextStyle(
                                             color: Colors.orange.shade900,
                                             fontWeight: FontWeight.bold,
@@ -318,7 +319,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
-                                      "You have successfully booked your slot. Please complete the payment to finalize your registration.",
+                                      context.l10n('payment_required_desc'),
                                       style: TextStyle(
                                         color: Colors.orange.shade900,
                                         fontSize: 14,
@@ -330,9 +331,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
-                                          "Total Amount",
-                                          style: TextStyle(
+                                        Text(
+                                          context.l10n('total_amount'),
+                                          style: const TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.grey,
@@ -367,9 +368,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                           (regData["total"] ?? 0).toDouble(),
                                           widget.eventId,
                                         ),
-                                        child: const Text(
-                                          "I Have Paid",
-                                          style: TextStyle(
+                                        child: Text(
+                                          context.l10n('i_have_paid'),
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -404,7 +405,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    "Registered",
+                                    context.l10n('registered'),
                                     style: TextStyle(
                                       color: Colors.blue.shade700,
                                       fontWeight: FontWeight.bold,
@@ -415,7 +416,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                "Status: ${status?.toUpperCase() ?? "REGISTERED"}",
+                                "${context.l10n('status')}: ${status?.toUpperCase() ?? context.l10n('registered').toUpperCase()}",
                                 style: TextStyle(
                                   color: Colors.blue.shade900,
                                   fontWeight: FontWeight.w600,
@@ -424,7 +425,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "${regData["adults"] ?? 0} Adults, ${regData["kids"] ?? 0} Kids",
+                                "${regData["adults"] ?? 0} ${context.l10n('adults')}, ${regData["kids"] ?? 0} ${context.l10n('kids')}",
                                 style: TextStyle(
                                   color: Colors.blue.shade800,
                                   fontSize: 13,
@@ -445,7 +446,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Category",
+                                context.l10n('category'),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -464,16 +465,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   : [];
 
                               if (families.isEmpty) {
-                                return const Text(
-                                  "No categories available",
-                                  style: TextStyle(color: Colors.grey),
+                                return Text(
+                                  context.l10n('no_categories_available'),
+                                  style: const TextStyle(color: Colors.grey),
                                 );
                               }
 
                               return DropdownButtonFormField<String>(
                                 initialValue: _selectedFamily,
                                 decoration: InputDecoration(
-                                  hintText: "Select Family",
+                                  hintText: context.l10n('select_family'),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -496,7 +497,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                           const SizedBox(height: 24),
 
                           Text(
-                            "Who's attending?",
+                            context.l10n('whos_attending'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -504,11 +505,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          _counter("Adults", adults, () {
+                          _counter(context.l10n('adults'), adults, () {
                             if (adults > 1) setState(() => adults--);
                           }, () => setState(() => adults++)),
                           const SizedBox(height: 16),
-                          _counter("Kids", kids, () {
+                          _counter(context.l10n('kids'), kids, () {
                             if (kids > 0) setState(() => kids--);
                           }, () => setState(() => kids++)),
                           const SizedBox(height: 32),
@@ -526,9 +527,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text(
-                                    "Total Amount",
-                                    style: TextStyle(
+                                  Text(
+                                    context.l10n('total_amount'),
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.grey,
@@ -567,9 +568,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 childFee,
                                 widget.eventId,
                               ),
-                              child: const Text(
-                                "Confirm Registration",
-                                style: TextStyle(
+                              child: Text(
+                                context.l10n('confirm_registration'),
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -596,9 +597,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                   total,
                                   widget.eventId,
                                 ),
-                                child: const Text(
-                                  "I Have Paid",
-                                  style: TextStyle(
+                                child: Text(
+                                  context.l10n('i_have_paid'),
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -692,14 +693,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (user == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Please login first")));
+      ).showSnackBar(SnackBar(content: Text(context.l10n('please_login'))));
       return;
     }
 
     if (_selectedFamily == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Please select a family")));
+      ).showSnackBar(SnackBar(content: Text(context.l10n('please_select_family'))));
       return;
     }
     try {
@@ -714,7 +715,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registered successfully")),
+          SnackBar(content: Text(context.l10n('registered_success'))),
         );
       }
     } catch (e) {
@@ -741,8 +742,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Payment submitted linked to registration"),
+          SnackBar(
+            content: Text(context.l10n('payment_submitted_msg')),
           ),
         );
       }
@@ -795,7 +796,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     Icon(Icons.check_circle, color: Colors.green.shade700),
                     const SizedBox(width: 12),
                     Text(
-                      "You are checked in",
+                      context.l10n('checked_in_msg'),
                       style: TextStyle(
                         color: Colors.green.shade700,
                         fontWeight: FontWeight.bold,
@@ -816,9 +817,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "EVENT CHECK-IN",
-                    style: TextStyle(
+                  Text(
+                    context.l10n('event_check_in'),
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
@@ -829,7 +830,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   TextField(
                     controller: _codeController,
                     decoration: InputDecoration(
-                      hintText: "Enter 6-digit code",
+                      hintText: context.l10n('enter_6_digit_code'),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -867,7 +868,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text("Check In"),
+                          : Text(context.l10n('check_in')),
                     ),
                   ),
                 ],
@@ -886,7 +887,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (correctCode == null || input != correctCode) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Invalid check-in code")));
+      ).showSnackBar(SnackBar(content: Text(context.l10n('invalid_code'))));
       return;
     }
 
@@ -906,7 +907,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Check-in successful!")));
+        ).showSnackBar(SnackBar(content: Text(context.l10n('check_in_success'))));
       }
     } catch (e) {
       if (context.mounted) {
@@ -957,7 +958,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "YOUR LUCKY NUMBERS",
+                context.l10n('your_lucky_numbers'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,

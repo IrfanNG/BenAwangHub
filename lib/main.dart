@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'app_theme.dart';
-
+import 'services/translation_manager.dart';
 import 'services/auth_wrapper.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -15,7 +17,12 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TranslationManager(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -23,10 +30,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final translationManager = Provider.of<TranslationManager>(context);
+
     return MaterialApp(
       title: 'BenAwang Hub',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      locale: translationManager.currentLocale,
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ms'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
 
       // 👇 App routing
       home: const AuthWrapper(),

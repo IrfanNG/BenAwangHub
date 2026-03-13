@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/translation_manager.dart';
 import '../services/event_service.dart';
 
 class AdminEditEventScreen extends StatefulWidget {
@@ -82,7 +83,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
         deadlineController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Please fill required fields"),
+          content: Text(context.l10n('fill_required')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -110,7 +111,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Event updated successfully")),
+          SnackBar(content: Text(context.l10n('event_updated_success'))),
         );
       }
     } catch (e) {
@@ -133,18 +134,18 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Event"), centerTitle: true),
+      appBar: AppBar(title: Text(context.l10n('edit_event')), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionTitle(context, "Event Details"),
+            _sectionTitle(context, context.l10n('event_details')),
             const SizedBox(height: 16),
 
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: "Event Title *"),
+              decoration: InputDecoration(labelText: context.l10n('event_title_label')),
             ),
             const SizedBox(height: 16),
 
@@ -166,13 +167,13 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                   });
                 }
               },
-              decoration: const InputDecoration(labelText: "Event Date *"),
+              decoration: InputDecoration(labelText: context.l10n('event_date_label')),
             ),
             const SizedBox(height: 16),
 
             TextField(
               controller: locationController,
-              decoration: const InputDecoration(labelText: "Location *"),
+              decoration: InputDecoration(labelText: "${context.l10n('location')} *"),
             ),
             const SizedBox(height: 16),
 
@@ -194,8 +195,8 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                   });
                 }
               },
-              decoration: const InputDecoration(
-                labelText: "Registration Deadline *",
+              decoration: InputDecoration(
+                labelText: context.l10n('reg_deadline_label'),
               ),
             ),
             const SizedBox(height: 16),
@@ -203,7 +204,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
             CheckboxListTile(
               value: hasLuckyDraw,
               onChanged: (v) => setState(() => hasLuckyDraw = v ?? false),
-              title: const Text("Enable Cabutan Bertuah"),
+              title: Text(context.l10n('enable_lucky_draw')),
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               activeColor: Theme.of(context).colorScheme.primary,
@@ -213,7 +214,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
             OutlinedButton.icon(
               onPressed: () => _showManageCategoriesDialog(context),
               icon: const Icon(Icons.category),
-              label: const Text("Manage Categories"),
+              label: Text(context.l10n('manage_categories')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.black,
                 side: const BorderSide(color: Colors.grey),
@@ -221,7 +222,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
             ),
 
             const SizedBox(height: 32),
-            _sectionTitle(context, "Pricing (Optional)"),
+            _sectionTitle(context, context.l10n('pricing_optional')),
             const SizedBox(height: 16),
 
             // ... (rest of build) ...
@@ -233,8 +234,8 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: "Adult Fee (RM)",
+                    decoration: InputDecoration(
+                      labelText: context.l10n('adult_fee_label'),
                     ),
                   ),
                 ),
@@ -245,8 +246,8 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: "Child Fee (RM)",
+                    decoration: InputDecoration(
+                      labelText: context.l10n('child_fee_label'),
                     ),
                   ),
                 ),
@@ -268,7 +269,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text("Save Changes"),
+                    : Text(context.l10n('save_changes')),
               ),
             ),
             const SizedBox(height: 40),
@@ -295,7 +296,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text("Manage Categories"),
+            title: Text(context.l10n('manage_categories')),
             content: SizedBox(
               width: double.maxFinite,
               height: 400,
@@ -306,10 +307,10 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                       Expanded(
                         child: TextField(
                           controller: newCatController,
-                          decoration: const InputDecoration(
-                            hintText: "New Category Name",
+                          decoration: InputDecoration(
+                            hintText: context.l10n('new_category_name'),
                             isDense: true,
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -335,7 +336,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
                   const Divider(),
                   Expanded(
                     child: _tempFamilies.isEmpty
-                        ? const Center(child: Text("No categories added yet"))
+                        ? Center(child: Text(context.l10n('no_categories_added')))
                         : ListView.separated(
                             shrinkWrap: true,
                             itemCount: _tempFamilies.length,
@@ -367,7 +368,7 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Done"),
+                child: Text(context.l10n('done')),
               ),
             ],
           );

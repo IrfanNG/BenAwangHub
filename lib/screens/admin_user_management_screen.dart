@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/translation_manager.dart';
 import '../services/user_role_service.dart';
 
 class AdminUserManagementScreen extends StatefulWidget {
@@ -19,9 +20,9 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Manage Users",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+        title: Text(
+          context.l10n('manage_users'),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -37,7 +38,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
             padding: const EdgeInsets.all(20),
             child: TextField(
               decoration: InputDecoration(
-                hintText: "Search users by email...",
+                hintText: context.l10n('search_users_hint'),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.grey.shade50,
@@ -56,7 +57,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Center(child: Text("Error loading users"));
+                  return Center(child: Text(context.l10n('error_loading_profile')));
                 }
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
@@ -69,7 +70,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                 }).toList();
 
                 if (users.isEmpty) {
-                  return const Center(child: Text("No users found"));
+                  return Center(child: Text(context.l10n('no_users_found')));
                 }
 
                 return ListView.separated(
@@ -102,7 +103,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        isAdmin ? "Administrator" : "User",
+                        isAdmin ? context.l10n('administrator') : context.l10n('user'),
                         style: TextStyle(
                           color: isAdmin
                               ? Colors.green.shade700
@@ -120,7 +121,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                                     : Colors.blue,
                               ),
                               child: Text(
-                                isAdmin ? "Demote" : "Make Admin",
+                                isAdmin ? context.l10n('demote') : context.l10n('make_admin'),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -141,21 +142,21 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(makeAdmin ? "Promote to Admin?" : "Remove Admin Access?"),
+        title: Text(makeAdmin ? context.l10n('promote_confirm_title') : context.l10n('demote_confirm_title')),
         content: Text(
           makeAdmin
-              ? "This user will have full access to manage events and payments."
-              : "This user will lose access to admin features.",
+              ? context.l10n('promote_confirm_body')
+              : context.l10n('demote_confirm_body'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel"),
+            child: Text(context.l10n('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(
-              "Confirm",
+              context.l10n('confirm'),
               style: TextStyle(
                 color: makeAdmin ? Colors.blue : Colors.red,
                 fontWeight: FontWeight.bold,
@@ -177,8 +178,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
           SnackBar(
             content: Text(
               makeAdmin
-                  ? "User promoted to Admin"
-                  : "User demoted to regular User",
+                  ? context.l10n('promoted_success')
+                  : context.l10n('demoted_success'),
             ),
           ),
         );

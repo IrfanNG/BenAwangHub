@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
 import '../services/auth_service.dart';
+import '../services/translation_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -71,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Google Sign-In Failed: $e"),
+            content: Text("${context.l10n('google_failed')}: $e"),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -86,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen>
         passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Please fill in all fields"),
+          content: Text(context.l10n('please_fill_all')),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
@@ -178,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Connect with your family",
+                        context.l10n('connect_family'),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.white70,
                         ),
@@ -209,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen>
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              isLogin ? "Welcome Back" : "Create Account",
+                              isLogin ? context.l10n('welcome_back') : context.l10n('create_account'),
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -219,18 +220,18 @@ class _LoginScreenState extends State<LoginScreen>
                             TextField(
                               controller: emailController,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: const InputDecoration(
-                                labelText: "Email",
-                                prefixIcon: Icon(Icons.email_outlined),
+                              decoration: InputDecoration(
+                                labelText: context.l10n('email'),
+                                prefixIcon: const Icon(Icons.email_outlined),
                               ),
                             ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: passwordController,
                               obscureText: true,
-                              decoration: const InputDecoration(
-                                labelText: "Password",
-                                prefixIcon: Icon(Icons.lock_outline),
+                              decoration: InputDecoration(
+                                labelText: context.l10n('password'),
+                                prefixIcon: const Icon(Icons.lock_outline),
                               ),
                             ),
                             const SizedBox(height: 32),
@@ -246,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         color: Colors.white,
                                       ),
                                     )
-                                  : Text(isLogin ? "Login" : "Register"),
+                                  : Text(isLogin ? context.l10n('login') : context.l10n('register')),
                             ),
                             const SizedBox(height: 16),
 
@@ -256,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen>
                               icon: const Icon(
                                 Icons.login,
                               ), // Replace with specific Google icon if asset available
-                              label: const Text("Sign in with Google"),
+                              label: Text(context.l10n('sign_in_google')),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 12,
@@ -272,8 +273,8 @@ class _LoginScreenState extends State<LoginScreen>
                               children: [
                                 Text(
                                   isLogin
-                                      ? "No account?"
-                                      : "Already registered?",
+                                      ? context.l10n('no_account')
+                                      : context.l10n('already_registered'),
                                   style: theme.textTheme.bodyMedium,
                                 ),
                                 TextButton(
@@ -283,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     _animationController.forward();
                                   },
                                   child: Text(
-                                    isLogin ? "Register now" : "Login",
+                                    isLogin ? context.l10n('register_now') : context.l10n('login'),
                                   ),
                                 ),
                               ],

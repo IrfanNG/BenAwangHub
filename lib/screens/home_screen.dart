@@ -6,6 +6,7 @@ import '../services/user_role_service.dart';
 import '../services/notification_service.dart';
 import 'admin_edit_event_screen.dart';
 import 'admin_dashboard_screen.dart';
+import '../services/translation_manager.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                       Icons.dashboard_outlined,
                       color: Colors.black,
                     ),
-                    tooltip: 'Admin Dashboard',
+                    tooltip: context.l10n('admin_dashboard'),
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -71,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                     Icons.account_circle_outlined,
                     color: Colors.black,
                   ),
-                  tooltip: 'Profile',
+                  tooltip: context.l10n('profile'),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ProfileScreen()),
@@ -92,7 +93,7 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Upcoming Events",
+                    context.l10n('upcoming_events'),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -101,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Your family gatherings timeline",
+                    context.l10n('family_gathering_timeline'),
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
@@ -124,7 +125,7 @@ class HomeScreen extends StatelessWidget {
                     return SliverFillRemaining(
                       child: Center(
                         child: Text(
-                          "Error loading events",
+                          context.l10n('error_loading_events'),
                           style: TextStyle(color: colorScheme.error),
                         ),
                       ),
@@ -149,7 +150,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              "No upcoming events",
+                              context.l10n('no_upcoming_events'),
                               style: TextStyle(
                                 color: Colors.grey.shade400,
                                 fontWeight: FontWeight.w500,
@@ -191,9 +192,9 @@ class HomeScreen extends StatelessWidget {
                               return await showDialog<bool>(
                                 context: context,
                                 builder: (_) => AlertDialog(
-                                  title: const Text("Delete Event"),
-                                  content: const Text(
-                                    "Are you sure you want to delete this event?",
+                                  title: Text(context.l10n('delete_event')),
+                                  content: Text(
+                                    context.l10n('confirm_delete_event'),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -202,14 +203,14 @@ class HomeScreen extends StatelessWidget {
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, false),
-                                      child: const Text("Cancel"),
+                                      child: Text(context.l10n('cancel')),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, true),
-                                      child: const Text(
-                                        "Delete",
-                                        style: TextStyle(color: Colors.red),
+                                      child: Text(
+                                        context.l10n('delete'),
+                                        style: const TextStyle(color: Colors.red),
                                       ),
                                     ),
                                   ],
@@ -220,12 +221,13 @@ class HomeScreen extends StatelessWidget {
                           },
                           onDismissed: (_) async {
                             final messenger = ScaffoldMessenger.of(context);
+                            final message = context.l10n('event_deleted');
                             await FirebaseFirestore.instance
                                 .collection("events")
                                 .doc(doc.id)
                                 .delete();
                             messenger.showSnackBar(
-                              const SnackBar(content: Text("Event deleted")),
+                              SnackBar(content: Text(message)),
                             );
                           },
                           child: _EventTile(data: data, docId: doc.id),
@@ -456,7 +458,7 @@ class _NotificationCard extends StatelessWidget {
                       Icon(Icons.campaign, color: Colors.teal.shade700),
                       const SizedBox(width: 8),
                       Text(
-                        "Upcoming Dates & Info",
+                        context.l10n('upcoming_dates_info'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

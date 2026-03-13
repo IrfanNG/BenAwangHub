@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/translation_manager.dart';
 
 class AboutAppScreen extends StatelessWidget {
   const AboutAppScreen({super.key});
@@ -10,7 +11,7 @@ class AboutAppScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("About App"),
+        title: Text(context.l10n('about_app')),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -52,7 +53,7 @@ class AboutAppScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                "Version 1.0.0",
+                "${context.l10n('version')} 1.0.0",
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -60,10 +61,10 @@ class AboutAppScreen extends StatelessWidget {
 
               const SizedBox(height: 32),
 
-              const Text(
-                "The ultimate community hub for managing events, registrations, and lucky draws efficiently.",
+              Text(
+                context.l10n('about_desc'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, height: 1.5),
+                style: const TextStyle(fontSize: 16, height: 1.5),
               ),
 
               const SizedBox(height: 48),
@@ -72,7 +73,7 @@ class AboutAppScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               Text(
-                "Developed with ❤️ by Irfan Ariff",
+                "${context.l10n('developed_by')} Irfan Ariff",
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.secondary,
@@ -80,7 +81,7 @@ class AboutAppScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                "© 2026 Irfanrff. All rights reserved.",
+                "© 2026 Irfanrff. ${context.l10n('rights_reserved')}",
                 style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
               ),
             ],
