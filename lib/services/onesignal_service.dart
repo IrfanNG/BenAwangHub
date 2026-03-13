@@ -13,6 +13,10 @@ class OneSignalService {
     final appId = dotenv.get('ONESIGNAL_APP_ID', fallback: 'ebfffbc8-21f0-4f90-bb39-53f62672b18d');
     final apiKey = dotenv.get('ONESIGNAL_REST_API_KEY');
 
+    debugPrint('OneSignal: Sending notification...');
+    debugPrint('OneSignal: App ID - $appId');
+    debugPrint('OneSignal: API Key - ${apiKey.substring(0, 5)}...');
+
     try {
       final response = await http.post(
         Uri.parse(_endpoint),
@@ -22,14 +26,17 @@ class OneSignalService {
         },
         body: jsonEncode({
           'app_id': appId,
-          'included_segments': ['All'],
+          'included_segments': ['Subscribed Users', 'Total Subscriptions'], // Match Saf project
           'headings': {'en': title},
           'contents': {'en': content},
         }),
       );
 
+      debugPrint('OneSignal: Status Code - ${response.statusCode}');
       if (response.statusCode != 200) {
         debugPrint('OneSignal Error: ${response.body}');
+      } else {
+        debugPrint('OneSignal: Success! ID - ${jsonDecode(response.body)['id']}');
       }
     } catch (e) {
       debugPrint('Error sending OneSignal notification: $e');
