@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -40,8 +41,8 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCNU_bo_diZDc6phGzrvD7oHn42B7UnYz0',
+  static FirebaseOptions web = FirebaseOptions(
+    apiKey: dotenv.get('FIREBASE_API_KEY_WEB'),
     appId: '1:542370963010:web:4d5f5f3102f4d3f0f797db',
     messagingSenderId: '542370963010',
     projectId: 'benawanghub',
@@ -49,16 +50,16 @@ class DefaultFirebaseOptions {
     storageBucket: 'benawanghub.firebasestorage.app',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCNn5o4v8ma8-pejARL4iQrQ7NH9FmaSdI',
+  static FirebaseOptions android = FirebaseOptions(
+    apiKey: dotenv.get('FIREBASE_API_KEY_ANDROID'),
     appId: '1:542370963010:android:b43cbd389487e914f797db',
     messagingSenderId: '542370963010',
     projectId: 'benawanghub',
     storageBucket: 'benawanghub.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCt96Q4YZrYwqwezlDOr4ojD-I-E96FV98',
+  static FirebaseOptions ios = FirebaseOptions(
+    apiKey: dotenv.get('FIREBASE_API_KEY_IOS'),
     appId: '1:542370963010:ios:5bcd978550318908f797db',
     messagingSenderId: '542370963010',
     projectId: 'benawanghub',
@@ -66,8 +67,8 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.benawanghub',
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCt96Q4YZrYwqwezlDOr4ojD-I-E96FV98',
+  static FirebaseOptions macos = FirebaseOptions(
+    apiKey: dotenv.get('FIREBASE_API_KEY_IOS'),
     appId: '1:542370963010:ios:5bcd978550318908f797db',
     messagingSenderId: '542370963010',
     projectId: 'benawanghub',
@@ -75,8 +76,8 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.benawanghub',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCNU_bo_diZDc6phGzrvD7oHn42B7UnYz0',
+  static FirebaseOptions windows = FirebaseOptions(
+    apiKey: dotenv.get('FIREBASE_API_KEY_WEB'),
     appId: '1:542370963010:web:9a2f9f8cc020578df797db',
     messagingSenderId: '542370963010',
     projectId: 'benawanghub',
