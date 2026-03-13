@@ -37,6 +37,17 @@
   <!-- You must replace YOUR_CLIENT_ID with your actual Web Client ID from Firebase Console -->
   <meta name="google-signin-client_id"
     content="542370963010-emi5s1jkpdnmduduo8qb12hgqmo9fi44.apps.googleusercontent.com">
+
+  <!-- OneSignal Integration -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "ebfffbc8-21f0-4f90-bb39-53f62672b18d",
+      });
+    });
+  </script>
 </head>
 
 <body>
