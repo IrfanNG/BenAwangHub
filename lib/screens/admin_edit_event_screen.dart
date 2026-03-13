@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/event_service.dart';
 
 class AdminEditEventScreen extends StatefulWidget {
   final String eventId;
@@ -94,20 +95,17 @@ class _AdminEditEventScreenState extends State<AdminEditEventScreen> {
     final childFee = double.tryParse(childFeeController.text.trim()) ?? 0;
 
     try {
-      await FirebaseFirestore.instance
-          .collection("events")
-          .doc(widget.eventId)
-          .update({
-            "title": titleController.text.trim(),
-            "date": dateController.text.trim(),
-            "location": locationController.text.trim(),
-            "deadline": deadlineController.text.trim(),
-            "adultFee": adultFee,
-            "childFee": childFee,
-            "hasLuckyDraw": hasLuckyDraw,
-            "families": _tempFamilies,
-            "updatedAt": Timestamp.now(),
-          });
+      await EventService.updateEvent(
+        id: widget.eventId,
+        title: titleController.text.trim(),
+        date: dateController.text.trim(),
+        location: locationController.text.trim(),
+        adultFee: adultFee,
+        childFee: childFee,
+        deadline: deadlineController.text.trim(),
+        hasLuckyDraw: hasLuckyDraw,
+        families: _tempFamilies,
+      );
 
       if (mounted) {
         Navigator.pop(context);

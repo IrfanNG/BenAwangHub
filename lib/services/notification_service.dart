@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'onesignal_service.dart';
 
 class NotificationService {
   static final _collection = FirebaseFirestore.instance.collection(
@@ -17,6 +18,12 @@ class NotificationService {
       'description': description,
       'createdAt': FieldValue.serverTimestamp(),
     });
+
+    // Send Push Notification
+    await OneSignalService.sendNotification(
+      title: 'Upcoming: $title',
+      content: description,
+    );
   }
 
   // Update an existing notification
@@ -31,6 +38,12 @@ class NotificationService {
       'date': date,
       'description': description,
     });
+
+    // Send Push Notification
+    await OneSignalService.sendNotification(
+      title: 'Update: $title',
+      content: description,
+    );
   }
 
   // Delete a notification
