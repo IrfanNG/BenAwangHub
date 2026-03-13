@@ -35,11 +35,21 @@ class OneSignalService {
       debugPrint('OneSignal: Status Code - ${response.statusCode}');
       if (response.statusCode != 200) {
         debugPrint('OneSignal Error: ${response.body}');
+        // Extract error message if possible
+        String errorMsg = response.body;
+        try {
+          final bodyJson = jsonDecode(response.body);
+          if (bodyJson['errors'] != null) {
+            errorMsg = bodyJson['errors'].toString();
+          }
+        } catch (_) {}
+        throw Exception('OneSignal API Error ($errorMsg)');
       } else {
         debugPrint('OneSignal: Success! ID - ${jsonDecode(response.body)['id']}');
       }
     } catch (e) {
       debugPrint('Error sending OneSignal notification: $e');
+      rethrow;
     }
   }
 }
