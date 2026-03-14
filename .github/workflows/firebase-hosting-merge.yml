@@ -16,11 +16,11 @@ jobs:
           channel: 'stable'
           cache: true
       - run: |
-          echo "FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }}" >> .env
-          echo "FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }}" >> .env
-          echo "FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }}" >> .env
-          echo "ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}" >> .env
-          echo "ONESIGNAL_REST_API_KEY=${{ secrets.ONESIGNAL_REST_API_KEY }}" >> .env
+          echo "FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }}" >> app.env
+          echo "FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }}" >> app.env
+          echo "FIREBASE_API_KEY_IOS=${{ secrets.FIREBASE_API_KEY_IOS }}" >> app.env
+          echo "ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}" >> app.env
+          echo "ONESIGNAL_REST_API_KEY=${{ secrets.ONESIGNAL_REST_API_KEY }}" >> app.env
       - run: flutter pub get
       - run: flutter build web --release
       - uses: FirebaseExtended/action-hosting-deploy@v0

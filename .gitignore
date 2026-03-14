@@ -41,4 +41,5 @@ firebase-debug.log
 # Env / secrets
 .env
 .env.*
-
+app.env
+app.env.*
