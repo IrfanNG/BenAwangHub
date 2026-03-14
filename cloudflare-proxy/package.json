@@ -1,0 +1,15 @@
+{
+  "name": "onesignal-proxy",
+  "version": "1.0.0",
+  "description": "CORS Proxy for OneSignal Push Notifications",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "wrangler publish"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.28"
+  },
+  "devDependencies": {
+    "wrangler": "^3.12.0"
+  }
+}

@@ -43,3 +43,9 @@ firebase-debug.log
 .env.*
 app.env
 app.env.*
+
+# Node
+node_modules/
+
+# Cloudflare Worker
+cloudflare-proxy/node_modules/

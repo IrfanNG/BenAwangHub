@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class OneSignalService {
-  static const String _endpoint = 'https://onesignal.com/api/v1/notifications';
+  // Using Cloudflare proxy to bypass Web CORS restrictions
+  static const String _endpoint = 'https://onesignal-proxy.mnifanmohdariff.workers.dev/';
 
   static Future<void> sendNotification({
     required String title,
     required String content,
   }) async {
-    final appId = dotenv.get('ONESIGNAL_APP_ID', fallback: 'ebfffbc8-21f0-4f90-bb39-53f62672b18d');
-    final apiKey = dotenv.get('ONESIGNAL_REST_API_KEY', fallback: '');
+    const appId = 'ebfffbc8-21f0-4f90-bb39-53f62672b18d';
+    const apiKey = 'os_v2_app_5p77xsbb6bhzbozzkp3cm4vrru6jdqcbkn3uda4rynjeexekg23kf4ti4aaeaizxprtkrhlzb6et5m6nttbuxzlmdtb42asidn2oyua';
 
     if (apiKey.isEmpty) {
       debugPrint('OneSignal Error: REST API Key is missing from .env/app.env');
@@ -30,7 +30,7 @@ class OneSignalService {
         },
         body: jsonEncode({
           'app_id': appId,
-          'included_segments': ['Subscribed Users'], 
+          'included_segments': ['Total Subscriptions'],
           'headings': {'en': title},
           'contents': {'en': content},
         }),
@@ -48,11 +48,11 @@ class OneSignalService {
       }
     } catch (e) {
       debugPrint('OneSignal: Critical error during send: $e');
-      // If it's a CORS error, warn the user
-      if (e.toString().contains('XMLHttpRequest')) {
-        debugPrint('OneSignal: This looks like a CORS error. OneSignal REST API often blocks direct browser calls.');
+      if (e.toString().contains('XMLHttpRequest') || kIsWeb) {
+        debugPrint('OneSignal: This is likely a CORS error. OneSignal REST API blocks direct browser calls on Web.');
       }
-      rethrow;
+      // We removed 'rethrow' so that sending a push notification failure 
+      // does not crash the app (like stopping an event from being created).
     }
   }
 }

@@ -47,6 +47,7 @@
       await OneSignal.init({
         appId: "ebfffbc8-21f0-4f90-bb39-53f62672b18d",
         safari_web_id: "web.onesignal.auto.1762c474-0f9c-4d7a-8b1b-6899cf4a42b1",
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
         notifyButton: {
           enable: true,
         },
@@ -55,30 +56,52 @@
           slidedown: {
             enabled: true,
             autoPrompt: true,
-            timeDelay: 5,
+            timeDelay: 3,
             pageViews: 1
           }
         }
       });
       console.log("OneSignal: Initialized!");
       
-      setTimeout(() => {
-        OneSignal.Notifications.requestPermission();
-      }, 5000);
+      // Force notifications to display even when user is ON the page
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        console.log("OneSignal: Foreground notification received, forcing display...");
+        event.notification.display();
+      });
+
+      // Request permission immediately
+      try {
+        await OneSignal.Notifications.requestPermission();
+        console.log("OneSignal: Permission granted!");
+      } catch(e) {
+        console.log("OneSignal: Permission error", e);
+      }
     });
   </script>
 </head>
 
 <body>
   <script>
+    // NUCLEAR FIX: Unregister ALL old Flutter service workers to force fresh code load
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          // Only unregister Flutter's service worker, keep OneSignal's
+          if (registration.scope.indexOf('OneSignal') === -1) {
+            registration.unregister().then(function(success) {
+              console.log('Unregistered old service worker:', registration.scope);
+            });
+          }
+        }
+      });
+    }
+
     window.addEventListener('load', function(ev) {
       _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: null, // Force no-cache for debug/deployment stability
-        },
+        serviceWorker: null,  // DISABLE Flutter service worker completely
         onEntrypointLoaded: function(engineInitializer) {
           engineInitializer.initializeEngine({
-            renderer: "html" // <--- FORCE HTML RENDERER HERE
+            renderer: "html"
           }).then(function(appRunner) {
             appRunner.runApp();
           });

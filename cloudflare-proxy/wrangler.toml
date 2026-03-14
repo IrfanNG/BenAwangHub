@@ -1,0 +1,6 @@
+name = "onesignal-proxy"
+main = "index.js"
+compatibility_date = "2024-02-01"
+
+[placement]
+mode = "smart"
