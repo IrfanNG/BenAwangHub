@@ -46,8 +46,18 @@
       console.log("OneSignal: Initializing...");
       await OneSignal.init({
         appId: "ebfffbc8-21f0-4f90-bb39-53f62672b18d",
+        safari_web_id: "web.onesignal.auto.1762c474-0f9c-4d7a-8b1b-6899cf4a42b1", // Placeholder or from dashboard
+        notifyButton: {
+          enable: true,
+        },
+        allowLocalhostAsHTTP: true,
       });
       console.log("OneSignal: Initialized!");
+      
+      // Auto-prompt the user
+      setTimeout(() => {
+        OneSignal.Notifications.requestPermission();
+      }, 5000);
     });
   </script>
 </head>
