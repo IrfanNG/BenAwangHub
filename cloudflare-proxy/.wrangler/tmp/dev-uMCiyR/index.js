@@ -45,12 +45,18 @@ var cloudflare_proxy_default = {
     }
     try {
       const body = await request.text();
-      const authHeader = request.headers.get("Authorization");
+      const apiKey = env.ONESIGNAL_REST_API_KEY;
+      if (!apiKey) {
+        return new Response(JSON.stringify({ error: "Server misconfigured: missing API key" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
       const response = await fetch("https://onesignal.com/api/v1/notifications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": authHeader || "Basic os_v2_app_5p77xsbb6bhzbozzkp3cm4vrru6jdqcbkn3uda4rynjeexekg23kf4ti4aaeaizxprtkrhlzb6et5m6nttbuxzlmdtb42asidn2oyua"
+          "Authorization": `Basic ${apiKey}`
         },
         body
       });

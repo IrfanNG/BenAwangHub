@@ -1,32 +1,32 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class OneSignalService {
-  // Using Cloudflare proxy to bypass Web CORS restrictions
+  // Cloudflare proxy handles authentication server-side
+  // No API keys needed in client code
   static const String _endpoint = 'https://onesignal-proxy.mnifanmohdariff.workers.dev/';
 
   static Future<void> sendNotification({
     required String title,
     required String content,
   }) async {
-    const appId = 'ebfffbc8-21f0-4f90-bb39-53f62672b18d';
-    const apiKey = 'os_v2_app_5p77xsbb6bhzbozzkp3cm4vrru6jdqcbkn3uda4rynjeexekg23kf4ti4aaeaizxprtkrhlzb6et5m6nttbuxzlmdtb42asidn2oyua';
+    final appId = dotenv.env['ONESIGNAL_APP_ID'] ?? '';
 
-    if (apiKey.isEmpty) {
-      debugPrint('OneSignal Error: REST API Key is missing from .env/app.env');
+    if (appId.isEmpty) {
+      debugPrint('OneSignal Error: App ID is missing from app.env');
       return;
     }
 
     debugPrint('OneSignal: Preparing to send notification...');
-    debugPrint('OneSignal: App ID - $appId');
 
     try {
       final response = await http.post(
         Uri.parse(_endpoint),
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': 'Basic $apiKey',
+          // No Authorization header needed — Cloudflare proxy adds it server-side
         },
         body: jsonEncode({
           'app_id': appId,
@@ -43,16 +43,10 @@ class OneSignalService {
         debugPrint('OneSignal: Success! ID - ${resData['id']}');
       } else {
         debugPrint('OneSignal API Error: ${response.body}');
-        // On Web, if this is a CORS error, status code might be 0 or throw
-        throw Exception('OneSignal API Error: ${response.body}');
       }
     } catch (e) {
-      debugPrint('OneSignal: Critical error during send: $e');
-      if (e.toString().contains('XMLHttpRequest') || kIsWeb) {
-        debugPrint('OneSignal: This is likely a CORS error. OneSignal REST API blocks direct browser calls on Web.');
-      }
-      // We removed 'rethrow' so that sending a push notification failure 
-      // does not crash the app (like stopping an event from being created).
+      debugPrint('OneSignal: Error during send: $e');
+      // Don't rethrow — notification failure should not crash the app
     }
   }
 }
